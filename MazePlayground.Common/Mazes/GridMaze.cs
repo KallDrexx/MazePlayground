@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MazePlayground.Common.Mazes
 {
@@ -7,7 +9,7 @@ namespace MazePlayground.Common.Mazes
         private readonly Random _random = new Random();
         
         private enum Direction { North, South, East, West }
-        public enum WallSetupAlgorithm { BinaryTree }
+        public enum WallSetupAlgorithm { BinaryTree, Sidewinder }
         
         public Cell[] Cells { get; }
         public int RowCount { get; }
@@ -47,6 +49,10 @@ namespace MazePlayground.Common.Mazes
                     SetupWallsBinaryTree();
                     break;
                 
+                case WallSetupAlgorithm.Sidewinder:
+                    SetupWallsSidewinder();
+                    break;
+                
                 default:
                     throw new NotSupportedException($"Algorithm {setupAlgorithm} not supported");
             }
@@ -70,6 +76,48 @@ namespace MazePlayground.Common.Mazes
                 {
                     var direction = _random.Next(0, 2) == 0 ? Direction.East : Direction.North;
                     OpenCellWall(cell, direction);
+                }
+            }
+        }
+
+        private void SetupWallsSidewinder()
+        {
+            var rowSet = new List<Cell>();
+            for (var row = 0; row < RowCount; row++)
+            {
+                for (var column = 0; column < ColumnCount; column++)
+                {
+                    var cell = GetCell(row, column);
+                    if (row == 0)
+                    {
+                        if (column != ColumnCount - 1)
+                        {
+                            OpenCellWall(cell, Direction.East);
+                        }
+                    }
+                    else
+                    {
+                        rowSet.Add(cell);
+                        
+                        var carveEast = column < ColumnCount - 1 && _random.Next(0, 2) == 0;
+                        if (carveEast)
+                        {
+                            OpenCellWall(cell, Direction.East);
+                        }
+                        else
+                        {
+                            var index = _random.Next(0, rowSet.Count);
+                            OpenCellWall(rowSet[index], Direction.North);
+                            rowSet.Clear();
+                        }
+                    }
+                }
+
+                if (rowSet.Any())
+                {
+                    var index = _random.Next(0, rowSet.Count);
+                    OpenCellWall(rowSet[index], Direction.North);
+                    rowSet.Clear();
                 }
             }
         }

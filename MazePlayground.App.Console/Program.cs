@@ -11,7 +11,7 @@ namespace MazePlayground.App.Console
         {
             const string pngFileName = "rendering.png";
             
-            var maze = new GridMaze(20, 20, GridMaze.WallSetupAlgorithm.BinaryTree);
+            var maze = new GridMaze(20, 20, GridMaze.WallSetupAlgorithm.Sidewinder);
             using (var image = SkiaMazeRenderer.Render(maze))
             using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
             using (var stream = File.OpenWrite(pngFileName))
