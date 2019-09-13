@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using MazePlayground.Common.Mazes;
 using MazePlayground.Common.Rendering;
 using SkiaSharp;

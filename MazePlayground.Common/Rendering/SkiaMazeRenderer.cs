@@ -22,7 +22,7 @@ namespace MazePlayground.Common.Rendering
             {
                 surface.Canvas.Clear(SKColors.Black);
                 
-                var whiteLine = new SKPaint {Color = SKColors.Green, StrokeWidth = cellLineWidth};
+                var whiteLine = new SKPaint {Color = SKColors.White, StrokeWidth = cellLineWidth};
 
                 foreach (var cell in maze.Cells)
                 {
