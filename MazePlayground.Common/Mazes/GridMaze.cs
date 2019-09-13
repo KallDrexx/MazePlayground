@@ -4,12 +4,16 @@ namespace MazePlayground.Common.Mazes
 {
     public class GridMaze
     {
+        private readonly Random _random = new Random();
+        
         private enum Direction { North, South, East, West }
         public enum WallSetupAlgorithm { BinaryTree }
         
         public Cell[] Cells { get; }
         public int RowCount { get; }
         public int ColumnCount { get; }
+        public Cell StartCell { get; }
+        public Cell EndCell { get; }
 
         public GridMaze(int rowCount, int columnCount, WallSetupAlgorithm setupAlgorithm)
         {
@@ -27,6 +31,12 @@ namespace MazePlayground.Common.Mazes
             }
             
             SetupWalls(setupAlgorithm);
+
+            var startRow = _random.Next(0, RowCount);
+            var endRow = _random.Next(0, RowCount);
+
+            StartCell = GetCell(startRow, 0);
+            EndCell = GetCell(endRow, ColumnCount - 1);
         }
 
         private void SetupWalls(WallSetupAlgorithm setupAlgorithm)
@@ -44,8 +54,6 @@ namespace MazePlayground.Common.Mazes
 
         private void SetupWallsBinaryTree()
         {
-            var random = new Random();
-            
             for (var row = 0; row < RowCount; row++)
             for (var column = 0; column < ColumnCount; column++)
             {
@@ -60,7 +68,7 @@ namespace MazePlayground.Common.Mazes
                 }
                 else if (row != 0 && column != ColumnCount - 1)
                 {
-                    var direction = random.Next(0, 2) == 0 ? Direction.East : Direction.North;
+                    var direction = _random.Next(0, 2) == 0 ? Direction.East : Direction.North;
                     OpenCellWall(cell, direction);
                 }
             }

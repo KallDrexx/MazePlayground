@@ -13,6 +13,8 @@ namespace MazePlayground.Common.Rendering
             const int margin = 10;
             const int cellLineWidth = 1;
             const int cellSize = 25;
+            const int labelMarginX = (int) (cellSize * 0.33);
+            const int labelMarginY = (int) (cellSize * 0.75);
 
             var imageWidth = (cellSize * maze.ColumnCount) + (margin * 2);
             var imageHeight = (cellSize * maze.RowCount) + (margin * 2);
@@ -21,8 +23,8 @@ namespace MazePlayground.Common.Rendering
             using (var surface = SKSurface.Create(imageInfo))
             {
                 surface.Canvas.Clear(SKColors.Black);
-                
-                var whiteLine = new SKPaint {Color = SKColors.White, StrokeWidth = cellLineWidth};
+
+                var whitePaint = new SKPaint {Color = SKColors.White, StrokeWidth = cellLineWidth};
 
                 foreach (var cell in maze.Cells)
                 {
@@ -33,22 +35,32 @@ namespace MazePlayground.Common.Rendering
 
                     if (cell.North == null)
                     {
-                        surface.Canvas.DrawLine(leftX, topY, rightX, topY, whiteLine);
+                        surface.Canvas.DrawLine(leftX, topY, rightX, topY, whitePaint);
                     }
 
                     if (cell.South == null)
                     {
-                        surface.Canvas.DrawLine(leftX, bottomY, rightX, bottomY, whiteLine);
+                        surface.Canvas.DrawLine(leftX, bottomY, rightX, bottomY, whitePaint);
                     }
 
                     if (cell.East == null)
                     {
-                        surface.Canvas.DrawLine(rightX, topY, rightX, bottomY, whiteLine);
+                        surface.Canvas.DrawLine(rightX, topY, rightX, bottomY, whitePaint);
                     }
 
                     if (cell.West == null)
                     {
-                        surface.Canvas.DrawLine(leftX, topY, leftX, bottomY, whiteLine);
+                        surface.Canvas.DrawLine(leftX, topY, leftX, bottomY, whitePaint);
+                    }
+
+                    if (cell == maze.StartCell)
+                    {
+                        surface.Canvas.DrawText("S", leftX + labelMarginX, topY + labelMarginY, whitePaint);
+                    }
+
+                    if (cell == maze.EndCell)
+                    {
+                        surface.Canvas.DrawText("E", leftX + labelMarginX, topY + labelMarginY, whitePaint);
                     }
                 }
 
