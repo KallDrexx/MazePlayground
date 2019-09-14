@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MazePlayground.Common", "Ma
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MazePlayground.App.Console", "MazePlayground.App.Console\MazePlayground.App.Console.csproj", "{A2F0CCE9-7954-4946-AB91-1E705ABA7008}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MazePlayground.App.MonoGame", "MazePlayground.App.MonoGame\MazePlayground.App.MonoGame.csproj", "{792E9043-5628-4AF3-8980-CD5E504F6494}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{A2F0CCE9-7954-4946-AB91-1E705ABA7008}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2F0CCE9-7954-4946-AB91-1E705ABA7008}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2F0CCE9-7954-4946-AB91-1E705ABA7008}.Release|Any CPU.Build.0 = Release|Any CPU
+		{792E9043-5628-4AF3-8980-CD5E504F6494}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{792E9043-5628-4AF3-8980-CD5E504F6494}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{792E9043-5628-4AF3-8980-CD5E504F6494}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{792E9043-5628-4AF3-8980-CD5E504F6494}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
