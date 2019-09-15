@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using MazePlayground.App.MonoGame.Config;
 using MazePlayground.Common.Mazes;
+using MazePlayground.Common.Mazes.Grid;
 using MazePlayground.Common.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

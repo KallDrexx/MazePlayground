@@ -1,5 +1,6 @@
 using System;
 using MazePlayground.Common.Mazes;
+using MazePlayground.Common.Mazes.Grid;
 using SkiaSharp;
 
 namespace MazePlayground.Common.Rendering

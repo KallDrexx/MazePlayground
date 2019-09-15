@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MazePlayground.Common.Mazes
+namespace MazePlayground.Common.Mazes.Grid
 {
     public class GridMaze
     {
         private readonly Random _random = new Random();
         
         private enum Direction { North, South, East, West }
-        public enum WallSetupAlgorithm { BinaryTree, Sidewinder }
-        
+
         public Cell[] Cells { get; }
         public int RowCount { get; }
         public int ColumnCount { get; }
@@ -175,22 +174,6 @@ namespace MazePlayground.Common.Mazes
             
             var index = (row * ColumnCount) + column;
             return Cells[index];
-        }
-
-        public class Cell
-        {
-            public int Row { get; }
-            public int Column { get; }
-            public Cell North { get; internal set; }
-            public Cell South { get; internal set; }
-            public Cell East { get; internal set; }
-            public Cell West { get; internal set; }
-        
-            public Cell(int row, int column)
-            {
-                Row = row;
-                Column = column;
-            }
         }
     }
 }
