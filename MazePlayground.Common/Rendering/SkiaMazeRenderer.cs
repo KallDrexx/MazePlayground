@@ -1,6 +1,5 @@
 using System;
 using MazePlayground.Common.Mazes;
-using MazePlayground.Common.Mazes.Grid;
 using SkiaSharp;
 
 namespace MazePlayground.Common.Rendering
@@ -29,37 +28,38 @@ namespace MazePlayground.Common.Rendering
 
                 foreach (var cell in maze.Cells)
                 {
-                    var leftX = (cell.Column * cellSize) + margin;
+                    var (row, column) =  maze.GetPositionOfCell(cell);
+                    var leftX = (column * cellSize) + margin;
                     var rightX = leftX + cellSize;
-                    var topY = (cell.Row * cellSize) + margin;
+                    var topY = (row * cellSize) + margin;
                     var bottomY = topY + cellSize;
 
-                    if (cell.North == null)
+                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.North) == null)
                     {
                         surface.Canvas.DrawLine(leftX, topY, rightX, topY, whitePaint);
                     }
 
-                    if (cell.South == null)
+                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.South) == null)
                     {
                         surface.Canvas.DrawLine(leftX, bottomY, rightX, bottomY, whitePaint);
                     }
 
-                    if (cell.East == null)
+                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.East) == null)
                     {
                         surface.Canvas.DrawLine(rightX, topY, rightX, bottomY, whitePaint);
                     }
 
-                    if (cell.West == null)
+                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.West) == null)
                     {
                         surface.Canvas.DrawLine(leftX, topY, leftX, bottomY, whitePaint);
                     }
 
-                    if (cell == maze.StartCell)
+                    if (cell == maze.StartingCell)
                     {
                         surface.Canvas.DrawText("S", leftX + labelMarginX, topY + labelMarginY, whitePaint);
                     }
 
-                    if (cell == maze.EndCell)
+                    if (cell == maze.FinishingCell)
                     {
                         surface.Canvas.DrawText("E", leftX + labelMarginX, topY + labelMarginY, whitePaint);
                     }
