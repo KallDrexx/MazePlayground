@@ -4,6 +4,5 @@ namespace MazePlayground.Common.Mazes
     {
         Cell StartingCell { get; }
         Cell FinishingCell { get; }
-        Cell GetLinkedCell(Cell linkedFromCell, byte wallIndex);
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using MazePlayground.App.MonoGame.Config;
+using MazePlayground.Common;
 using MazePlayground.Common.Mazes;
 using MazePlayground.Common.Rendering;
 using Microsoft.Xna.Framework;
@@ -37,7 +38,9 @@ namespace MazePlayground.App.MonoGame
             if (config == null) throw new ArgumentNullException(nameof(config));
 
             var maze = new GridMaze(config.RowCount, config.ColumnCount, config.WallSetupAlgorithm);
-            using (var image = SkiaMazeRenderer.Render(maze))
+            var mazeDistanceMap = MazeSolver.GetDistanceFromStartMap(maze);
+            var solutionPath = MazeSolver.GetShortestPath(maze);
+            using (var image = SkiaMazeRenderer.Render(maze, mazeDistanceMap, solutionPath))
             {
                 RenderImageToTexture2D(image);
             }
