@@ -14,6 +14,7 @@ namespace MazePlayground.App.MonoGame
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private Texture2D _currentMazeTexture = null;
+        private Rectangle _renderTarget;
 
         public MazeRenderer(GraphicsDevice graphicsDevice)
         {
@@ -26,7 +27,7 @@ namespace MazePlayground.App.MonoGame
             if (_currentMazeTexture != null)
             {
                 _spriteBatch.Begin();
-                _spriteBatch.Draw(_currentMazeTexture, Vector2.Zero, Color.White);
+                _spriteBatch.Draw(_currentMazeTexture, _renderTarget, Color.White);
                 _spriteBatch.End();
             }
         }
@@ -39,6 +40,30 @@ namespace MazePlayground.App.MonoGame
             using (var image = SkiaMazeRenderer.Render(maze))
             {
                 RenderImageToTexture2D(image);
+            }
+            
+            _renderTarget = new Rectangle(0, 0, _currentMazeTexture.Width, _currentMazeTexture.Height);
+        }
+
+        public void MoveRenderedMaze(Point moveBy)
+        {
+            _renderTarget.X += moveBy.X;
+            _renderTarget.Y += moveBy.Y;
+        }
+
+        public void ScaleRenderedMaze(int scaleBy)
+        {
+            _renderTarget.Width += scaleBy;
+            _renderTarget.Height += scaleBy;
+
+            if (_renderTarget.Width < 0)
+            {
+                _renderTarget.Width = 10;
+            }
+
+            if (_renderTarget.Height < 0)
+            {
+                _renderTarget.Height = 10;
             }
         }
 

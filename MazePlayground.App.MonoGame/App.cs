@@ -1,4 +1,5 @@
 using System;
+using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Num = System.Numerics;
@@ -39,25 +40,16 @@ namespace MazePlayground.App.MonoGame
             base.Initialize();
         }
 
-        protected override void LoadContent()
+        protected override void Update(GameTime gameTime)
         {
-            // First, load the texture as a Texture2D (can also be done using the XNA/FNA content pipeline)
-            _xnaTexture = CreateTexture(GraphicsDevice, 300, 150, pixel =>
-            {
-                var red = (pixel % 300) / 2;
-                return new Color(red, 1, 1);
-            });
-
-            // Then, bind it to an ImGui-friendly pointer, that we can use during regular ImGui.** calls (see below)
-            _imGuiTexture = _imGuiRenderer.BindTexture(_xnaTexture);
-            base.LoadContent();
+	        _logicController.ExecuteLogic();
+	        
+	        base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-            
-            _logicController.ExecuteLogic();
             
             _mazeRenderer.Draw();
             
