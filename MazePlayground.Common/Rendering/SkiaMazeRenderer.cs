@@ -1,12 +1,13 @@
 using System;
 using MazePlayground.Common.Mazes;
+using MazePlayground.Common.Solvers;
 using SkiaSharp;
 
 namespace MazePlayground.Common.Rendering
 {
     public static class SkiaMazeRenderer
     {
-        public static SKImage Render(GridMaze maze, RenderOptions renderOptions, SolutionData solution)
+        public static SKImage Render(GridMaze maze, RenderOptions renderOptions, DistanceInfo distanceInfo, ShortestPathInfo shortestPathInfo)
         {
             const int margin = 10;
             const int cellLineWidth = 1;
@@ -59,18 +60,18 @@ namespace MazePlayground.Common.Rendering
                         surface.Canvas.DrawLine(leftX, topY, leftX, bottomY, whitePaint);
                     }
 
-                    if (renderOptions.HighlightShortestPath && solution.CellsInShortestPath.Contains(cell))
+                    if (renderOptions.HighlightShortestPath && shortestPathInfo.IsCellInPath(cell))
                     {
                         var paint = cell == maze.StartingCell ? startPaint
                             : cell == maze.FinishingCell ? finishPaint
                             : pathPaint;
 
-                        var distance = solution.DistanceFromStartMap[cell];
+                        var distance = distanceInfo.DistanceFromStartMap[cell];
                         surface.Canvas.DrawText(distance.ToString(), leftX + labelMarginX, topY + labelMarginY, paint);
                     }
-                    else if (renderOptions.ShowAllDistances && solution.DistanceFromStartMap.ContainsKey(cell))
+                    else if (renderOptions.ShowAllDistances && distanceInfo.DistanceFromStartMap.ContainsKey(cell))
                     {
-                        var distance = solution.DistanceFromStartMap[cell];
+                        var distance = distanceInfo.DistanceFromStartMap[cell];
                         surface.Canvas.DrawText(distance.ToString(), leftX + labelMarginX, topY + labelMarginY, whitePaint);
                     }
                     else if (cell == maze.StartingCell)

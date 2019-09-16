@@ -4,6 +4,7 @@ using MazePlayground.App.MonoGame.Config;
 using MazePlayground.Common;
 using MazePlayground.Common.Mazes;
 using MazePlayground.Common.Rendering;
+using MazePlayground.Common.Solvers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SkiaSharp;
@@ -18,7 +19,8 @@ namespace MazePlayground.App.MonoGame
         private Rectangle _renderTarget;
         private RenderOptions _renderOptions;
         private IMaze _currentMaze;
-        private SolutionData _currentSolution;
+        private DistanceInfo _mazeDistanceInfo;
+        private ShortestPathInfo _mazeShortestPathInfo;
 
         public MazeRenderer(GraphicsDevice graphicsDevice)
         {
@@ -42,7 +44,8 @@ namespace MazePlayground.App.MonoGame
             if (config == null) throw new ArgumentNullException(nameof(config));
 
             _currentMaze = new GridMaze(config.RowCount, config.ColumnCount, config.WallSetupAlgorithm);
-            _currentSolution = MazeSolver.Solve(_currentMaze);
+            _mazeDistanceInfo = CellDistanceSolver.GetDistancesFromCell(_currentMaze.StartingCell);
+            _mazeShortestPathInfo = ShortestPathSolver.Solve(_currentMaze.FinishingCell, _mazeDistanceInfo);
             
             UpdateMazeRendering();
             ResetMazePositionAndScaling();
@@ -91,9 +94,14 @@ namespace MazePlayground.App.MonoGame
 
         private void UpdateMazeRendering()
         {
+            if (_currentMaze == null)
+            {
+                return;
+            }
+            
             if (_currentMaze is GridMaze gridMaze)
             {
-                using (var image = SkiaMazeRenderer.Render(gridMaze, _renderOptions, _currentSolution))
+                using (var image = SkiaMazeRenderer.Render(gridMaze, _renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo))
                 {
                     RenderImageToTexture2D(image);
                 }
