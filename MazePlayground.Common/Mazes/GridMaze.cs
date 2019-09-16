@@ -11,7 +11,7 @@ namespace MazePlayground.Common.Mazes
         private readonly Dictionary<Cell, int> _cellIndexMap = new Dictionary<Cell, int>();
         
         public enum Direction { North, South, East, West }
-        public enum WallSetupAlgorithm { BinaryTree, Sidewinder }
+        public enum WallSetupAlgorithm { AldousBroder, BinaryTree, Sidewinder }
 
         public Cell[] Cells { get; }
         public int RowCount { get; }
@@ -131,6 +131,10 @@ namespace MazePlayground.Common.Mazes
                     SetupWallsSidewinder();
                     break;
                 
+                case WallSetupAlgorithm.AldousBroder:
+                    SetupWallsAldousBroder();
+                    break;
+                
                 default:
                     throw new NotSupportedException($"Algorithm {setupAlgorithm} not supported");
             }
@@ -208,6 +212,34 @@ namespace MazePlayground.Common.Mazes
                 {
                     LinkRandomCellFromSet(rowSet);
                 }
+            }
+        }
+
+        private void SetupWallsAldousBroder()
+        {
+            var visitedCells = new HashSet<Cell>();
+            var currentCell = Cells[0];
+            visitedCells.Add(currentCell);
+            while (visitedCells.Count < Cells.Length)
+            {
+                var cellIndex = _cellIndexMap[currentCell];
+                var currentPosition = GetPositionFromIndex(cellIndex);
+
+                var directions = new List<Direction>();
+                if (currentPosition.row != 0) directions.Add(Direction.North);
+                if (currentPosition.column != 0) directions.Add(Direction.West);
+                if (currentPosition.row < RowCount - 1) directions.Add(Direction.South);
+                if (currentPosition.column < ColumnCount - 1) directions.Add(Direction.East);
+
+                var nextDirection = directions[_random.Next(0, directions.Count)];
+                var nextCell = GetCellInDirection(currentPosition.row, currentPosition.column, nextDirection);
+                if (!visitedCells.Contains(nextCell))
+                {
+                    OpenCellWall(currentCell, nextCell, nextDirection);
+                    visitedCells.Add(nextCell);
+                }
+
+                currentCell = nextCell;
             }
         }
         
