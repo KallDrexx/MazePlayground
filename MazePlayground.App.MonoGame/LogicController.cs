@@ -10,6 +10,7 @@ namespace MazePlayground.App.MonoGame
         private readonly MazeRenderer _mazeRenderer;
         private Point? _mousePositionLastFrame;
         private int _scrollWheelLastFrame;
+        private bool _f1WasDown, _f2WasDown;
 
         public LogicController(MazeConfigWindow mazeConfigWindow, MazeRenderer mazeRenderer)
         {
@@ -18,6 +19,12 @@ namespace MazePlayground.App.MonoGame
         }
 
         public void ExecuteLogic()
+        {
+            HandleGuiEvents();
+            HandleInput();
+        }
+
+        private void HandleGuiEvents()
         {
             if (_mazeConfigWindow.GenerateButtonPressed)
             {
@@ -29,8 +36,21 @@ namespace MazePlayground.App.MonoGame
                 }
             }
 
+            if (_mazeConfigWindow.RenderingOptionsChanged)
+            {
+                _mazeRenderer.SetRenderOptions(_mazeConfigWindow.RenderingOptions);
+            }
+
+            if (_mazeConfigWindow.ResetMazePositionPressed)
+            {
+                _mazeRenderer.ResetMazePositionAndScaling();
+            }
+        }
+
+        private void HandleInput()
+        {
             var mouseState = Mouse.GetState();
-            if (mouseState.LeftButton == ButtonState.Pressed)
+            if (mouseState.LeftButton == ButtonState.Pressed && !_mazeConfigWindow.WindowHasFocus)
             {
                 // Either starting or continuing a drag
                 if (_mousePositionLastFrame == null)
@@ -45,13 +65,33 @@ namespace MazePlayground.App.MonoGame
             }
             else
             {
-                // No longer shifting
+                // No longer panning
                 _mousePositionLastFrame = null;
             }
 
             var scrollWheelChange = mouseState.ScrollWheelValue - _scrollWheelLastFrame;
             _scrollWheelLastFrame = mouseState.ScrollWheelValue;
             _mazeRenderer.ScaleRenderedMaze(scrollWheelChange);
+
+            if (Keyboard.GetState().IsKeyDown(Keys.F1))
+            {
+                _f1WasDown = true;
+            }
+            else if (_f1WasDown)
+            {
+                _mazeConfigWindow.ToggleDemoWindow();
+                _f1WasDown = false;
+            }
+
+            if (Keyboard.GetState().IsKeyDown(Keys.F2))
+            {
+                _f2WasDown = true;
+            }
+            else if (_f2WasDown)
+            {
+                _mazeConfigWindow.ToggleMetricsWindow();
+                _f2WasDown = false;
+            }
         }
     }
 }

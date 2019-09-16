@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using MazePlayground.Common.Mazes;
 using SkiaSharp;
 
@@ -7,20 +6,21 @@ namespace MazePlayground.Common.Rendering
 {
     public static class SkiaMazeRenderer
     {
-        public static SKImage Render(GridMaze maze, Dictionary<Cell, int> distanceMap = null, Cell[] solutionPath = null)
+        public static SKImage Render(GridMaze maze, RenderOptions renderOptions, SolutionData solution)
         {
-            if (maze == null) throw new ArgumentNullException(nameof(maze));
-            
             const int margin = 10;
             const int cellLineWidth = 1;
             const int cellSize = 25;
             const int labelMarginX = (int) (cellSize * 0.33);
             const int labelMarginY = (int) (cellSize * 0.75);
+            
+            if (maze == null) throw new ArgumentNullException(nameof(maze));
+
+            renderOptions = renderOptions ?? new RenderOptions();
 
             var imageWidth = (cellSize * maze.ColumnCount) + (margin * 2);
             var imageHeight = (cellSize * maze.RowCount) + (margin * 2);
-
-            var solutionPathLookup = new HashSet<Cell>(solutionPath ?? new Cell[0]);
+            
             var imageInfo = new SKImageInfo(imageWidth, imageHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
             using (var surface = SKSurface.Create(imageInfo))
             {
@@ -58,32 +58,28 @@ namespace MazePlayground.Common.Rendering
                     {
                         surface.Canvas.DrawLine(leftX, topY, leftX, bottomY, whitePaint);
                     }
-                    
-                    if (distanceMap != null)
-                    {
-                        if (distanceMap.ContainsKey(cell))
-                        {
-                            var distance = distanceMap[cell];
 
-                            var paint = cell == maze.StartingCell ? startPaint
-                                : cell == maze.FinishingCell ? finishPaint
-                                : solutionPathLookup.Contains(cell) ? pathPaint
-                                : whitePaint;
-                            
-                            surface.Canvas.DrawText(distance.ToString(), leftX + labelMarginX, topY + labelMarginY, paint);
-                        }
+                    if (renderOptions.HighlightShortestPath && solution.CellsInShortestPath.Contains(cell))
+                    {
+                        var paint = cell == maze.StartingCell ? startPaint
+                            : cell == maze.FinishingCell ? finishPaint
+                            : pathPaint;
+
+                        var distance = solution.DistanceFromStartMap[cell];
+                        surface.Canvas.DrawText(distance.ToString(), leftX + labelMarginX, topY + labelMarginY, paint);
                     }
-                    else
+                    else if (renderOptions.ShowAllDistances && solution.DistanceFromStartMap.ContainsKey(cell))
                     {
-                        if (cell == maze.StartingCell)
-                        {
-                            surface.Canvas.DrawText("S", leftX + labelMarginX, topY + labelMarginY, startPaint);
-                        }
-
-                        if (cell == maze.FinishingCell)
-                        {
-                            surface.Canvas.DrawText("E", leftX + labelMarginX, topY + labelMarginY, finishPaint);
-                        }
+                        var distance = solution.DistanceFromStartMap[cell];
+                        surface.Canvas.DrawText(distance.ToString(), leftX + labelMarginX, topY + labelMarginY, whitePaint);
+                    }
+                    else if (cell == maze.StartingCell)
+                    {
+                        surface.Canvas.DrawText("S", leftX + labelMarginX, topY + labelMarginY, startPaint);
+                    }
+                    else if (cell == maze.FinishingCell)
+                    {
+                        surface.Canvas.DrawText("E", leftX + labelMarginX, topY + labelMarginY, finishPaint);
                     }
                 }
 

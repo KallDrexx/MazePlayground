@@ -47,7 +47,7 @@ namespace MazePlayground.App.MonoGame
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
             
             _mazeRenderer.Draw();
             

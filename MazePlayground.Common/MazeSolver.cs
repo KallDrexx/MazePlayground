@@ -7,19 +7,10 @@ namespace MazePlayground.Common
 {
     public static class MazeSolver
     {
-        public static Dictionary<Cell, int> GetDistanceFromStartMap(IMaze maze)
-        {
-            if (maze == null) throw new ArgumentNullException(nameof(maze));
-            if (maze.StartingCell == null) throw new ArgumentNullException(nameof(maze.StartingCell));
-
-            var map = new Dictionary<Cell, int>();
-            var cellsToCheck = new List<Cell>(new[] {maze.StartingCell});
-            MapCellDistance(cellsToCheck, map);
-
-            return map;
-        }
-
-        public static Cell[] GetShortestPath(IMaze maze)
+        /// <summary>
+        /// Finds the shortest path from the starting cell to the finishing cell 
+        /// </summary>
+        public static SolutionData Solve(IMaze maze)
         {
             if (maze == null) throw new ArgumentNullException(nameof(maze));
             if (maze.StartingCell == null) throw new ArgumentNullException(nameof(maze.StartingCell));
@@ -27,7 +18,7 @@ namespace MazePlayground.Common
             
             var map = new Dictionary<Cell, int>();
             var cellsToCheck = new List<Cell>(new[] {maze.StartingCell});
-            MapCellDistance(cellsToCheck, map, maze.FinishingCell);
+            MapCellDistance(cellsToCheck, map);
             
             // Find the path by going in decreasing distances
             var reversePath = new List<Cell>();
@@ -39,13 +30,6 @@ namespace MazePlayground.Common
                 var previousCellDistance = int.MaxValue;
                 foreach (var cell in currentCell.LinkIdToCellMap.Values)
                 {
-                    if (!map.ContainsKey(cell))
-                    {
-                        // We short circuited Dijkstra before we got to this cell, so this cell definitely isn't
-                        // on the shortest path
-                        continue;
-                    }
-                    
                     var distance = map[cell];
                     
                     if (previousCell == null)
@@ -63,15 +47,11 @@ namespace MazePlayground.Common
                     }
                 }
 
-                if (previousCell == null)
-                {
-                    throw new InvalidOperationException("No previous cell found for current cell");
-                }
-
-                currentCell = previousCell;
+                currentCell = previousCell ?? throw new InvalidOperationException("No previous cell found for current cell");
             }
-
-            return reversePath.ToArray().Reverse().ToArray();
+            
+            var shortestPath = reversePath.ToArray().Reverse().ToArray();
+            return new SolutionData(map, shortestPath);
         }
 
         private static void MapCellDistance(List<Cell> cellsToCheck, Dictionary<Cell, int> map, Cell endingCell = null)

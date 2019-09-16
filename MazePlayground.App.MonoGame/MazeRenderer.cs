@@ -14,13 +14,17 @@ namespace MazePlayground.App.MonoGame
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
-        private Texture2D _currentMazeTexture = null;
+        private Texture2D _currentMazeTexture;
         private Rectangle _renderTarget;
+        private RenderOptions _renderOptions;
+        private IMaze _currentMaze;
+        private SolutionData _currentSolution;
 
         public MazeRenderer(GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = new SpriteBatch(graphicsDevice);
+            ResetMazePositionAndScaling();
         }
 
         public void Draw()
@@ -37,15 +41,11 @@ namespace MazePlayground.App.MonoGame
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
 
-            var maze = new GridMaze(config.RowCount, config.ColumnCount, config.WallSetupAlgorithm);
-            var mazeDistanceMap = MazeSolver.GetDistanceFromStartMap(maze);
-            var solutionPath = MazeSolver.GetShortestPath(maze);
-            using (var image = SkiaMazeRenderer.Render(maze, mazeDistanceMap, solutionPath))
-            {
-                RenderImageToTexture2D(image);
-            }
+            _currentMaze = new GridMaze(config.RowCount, config.ColumnCount, config.WallSetupAlgorithm);
+            _currentSolution = MazeSolver.Solve(_currentMaze);
             
-            _renderTarget = new Rectangle(0, 0, _currentMazeTexture.Width, _currentMazeTexture.Height);
+            UpdateMazeRendering();
+            ResetMazePositionAndScaling();
         }
 
         public void MoveRenderedMaze(Point moveBy)
@@ -56,6 +56,8 @@ namespace MazePlayground.App.MonoGame
 
         public void ScaleRenderedMaze(int scaleBy)
         {
+            scaleBy = scaleBy / 2;
+            
             _renderTarget.Width += scaleBy;
             _renderTarget.Height += scaleBy;
 
@@ -67,6 +69,35 @@ namespace MazePlayground.App.MonoGame
             if (_renderTarget.Height < 0)
             {
                 _renderTarget.Height = 10;
+            }
+        }
+
+        public void SetRenderOptions(RenderOptions renderOptions)
+        {
+            _renderOptions = renderOptions;
+            UpdateMazeRendering();
+        }
+
+        public void ResetMazePositionAndScaling()
+        {
+            if (_currentMazeTexture != null)
+            {
+                _renderTarget = new Rectangle(0, 0, _currentMazeTexture.Width, _currentMazeTexture.Height);
+            }
+        }
+
+        private void UpdateMazeRendering()
+        {
+            if (_currentMaze is GridMaze gridMaze)
+            {
+                using (var image = SkiaMazeRenderer.Render(gridMaze, _renderOptions, _currentSolution))
+                {
+                    RenderImageToTexture2D(image);
+                }
+            }
+            else
+            {
+                throw new NotSupportedException($"Maze type {_currentMaze.GetType()} cannot be rendered");
             }
         }
 
