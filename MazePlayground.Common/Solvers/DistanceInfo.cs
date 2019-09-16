@@ -6,12 +6,10 @@ namespace MazePlayground.Common.Solvers
     public class DistanceInfo
     {
         public Dictionary<Cell, int> DistanceFromStartMap { get; }
-        public Cell FarthestCell { get; }
-        
-        public DistanceInfo(Dictionary<Cell, int> distanceFromStartMap, Cell farthestCell)
+
+        public DistanceInfo(Dictionary<Cell, int> distanceFromStartMap)
         {
             DistanceFromStartMap = distanceFromStartMap;
-            FarthestCell = farthestCell;
         }
     }
 }

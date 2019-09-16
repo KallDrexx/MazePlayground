@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using MazePlayground.Common.Solvers;
 
 namespace MazePlayground.Common.Mazes
 {
@@ -15,8 +16,8 @@ namespace MazePlayground.Common.Mazes
         public Cell[] Cells { get; }
         public int RowCount { get; }
         public int ColumnCount { get; }
-        public Cell StartingCell { get; }
-        public Cell FinishingCell { get; }
+        public Cell StartingCell { get; private set; }
+        public Cell FinishingCell { get; private set; }
 
         public GridMaze(int rowCount, int columnCount, WallSetupAlgorithm setupAlgorithm)
         {
@@ -35,17 +36,7 @@ namespace MazePlayground.Common.Mazes
             }
             
             SetupWalls(setupAlgorithm);
-
-            var startRow = _random.Next(0, RowCount);
-            var endRow = _random.Next(0, RowCount);
-
-            StartingCell = GetCell(startRow, 0);
-            FinishingCell = GetCell(endRow, ColumnCount - 1);
-        }
-        
-        public Cell GetLinkedCell(Cell linkedFromCell, byte wallIndex)
-        {
-            throw new NotImplementedException();
+            SetStartingAndEndingCells();
         }
 
         public (int row, int column) GetPositionOfCell(Cell cell)
@@ -235,6 +226,46 @@ namespace MazePlayground.Common.Mazes
             return index >= 0 && index < Cells.Length
                 ? Cells[index]
                 : null;
+        }
+
+        private void SetStartingAndEndingCells()
+        {
+            var distanceInfo = CellDistanceSolver.GetDistancesFromCell(Cells[0]);
+            FinishingCell = FindFarthestEdgeCell(distanceInfo);
+            
+            // Find the farthest cell on the left from the farthest cell found from the root, so we always start
+            // on the left hand side.
+            distanceInfo = CellDistanceSolver.GetDistancesFromCell(FinishingCell);
+            StartingCell = FindFarthestEdgeCell(distanceInfo, true);
+        }
+
+        private Cell FindFarthestEdgeCell(DistanceInfo distanceInfo, bool onlyLeftEdge = false)
+        {
+            var farthestCell = (Cell) null;
+            var farthestCellDistance = 0;
+
+            var positionsToCheck = Enumerable.Range(0, RowCount).Select(x => (x, 0)); // left
+            if (!onlyLeftEdge)
+            {
+                positionsToCheck = positionsToCheck.Concat(Enumerable.Range(0, ColumnCount).Select(x => (0, x))) // top
+                    .Concat(Enumerable.Range(0, ColumnCount).Select(x => (RowCount - 1, x))) // bottom
+                    .Concat(Enumerable.Range(0, RowCount).Select(x => (x, ColumnCount - 1))); // right
+            }
+
+            foreach (var (row, column) in positionsToCheck)
+            {
+                var cell = GetCell(row, column);
+                if (distanceInfo.DistanceFromStartMap.TryGetValue(cell, out var distance))
+                {
+                    if (distance > farthestCellDistance)
+                    {
+                        farthestCell = cell;
+                        farthestCellDistance = distance;
+                    }
+                }
+            }
+
+            return farthestCell;
         }
     }
 }

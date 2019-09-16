@@ -14,7 +14,7 @@ namespace MazePlayground.Common.Solvers
             var map = new Dictionary<Cell, int>();
             MapCellDistance(startingCell, map, out var farthestCell);
             
-            return new DistanceInfo(map, farthestCell);
+            return new DistanceInfo(map);
         }
         
         private static void MapCellDistance(Cell cellToCheck, Dictionary<Cell, int> map, out Cell farthestCell)
