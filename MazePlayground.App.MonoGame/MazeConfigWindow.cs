@@ -5,11 +5,15 @@ using ImGuiNET;
 using MazePlayground.App.MonoGame.Config;
 using MazePlayground.Common.Mazes;
 using MazePlayground.Common.Rendering;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace MazePlayground.App.MonoGame
 {
     public class MazeConfigWindow
     {
+        public const int WindowWidth = 250;
+
+        private readonly GraphicsDevice _graphicsDevice;
         private readonly string[] _mazeGridTypes;
         private readonly string[] _gridAlgorithmNames;
         private int _selectedMazeTypeIndex;
@@ -31,15 +35,12 @@ namespace MazePlayground.App.MonoGame
         
         public MazeType MazeType => GetMazeType();
         public GridMazeConfig GridMazeConfig => GetGridMazeConfig();
+        public RenderOptions RenderingOptions => GetRenderOptions();
 
-        public RenderOptions RenderingOptions => new RenderOptions
+        public MazeConfigWindow(GraphicsDevice graphicsDevice)
         {
-            HighlightShortestPath = _highlightShortestPath, 
-            ShowAllDistances = _showDistances,
-        };
-
-        public MazeConfigWindow()
-        {
+            _graphicsDevice = graphicsDevice;
+            
             _mazeGridTypes = Enum.GetValues(typeof(MazeType))
                 .Cast<MazeType>()
                 .Select(x => x.ToString())
@@ -66,7 +67,13 @@ namespace MazePlayground.App.MonoGame
             if (_showDemoWindow) ImGui.ShowDemoWindow();
             if (_showMetricsWindow) ImGui.ShowMetricsWindow();
             
-            ImGui.Begin("Maze Configuration", ImGuiWindowFlags.AlwaysAutoResize);
+            var windowOptions = ImGuiWindowFlags.NoMove | 
+                                ImGuiWindowFlags.NoResize | 
+                                ImGuiWindowFlags.NoCollapse;
+            
+            ImGui.SetNextWindowPos(new Vector2(0), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new Vector2(WindowWidth, _graphicsDevice.Viewport.Height));
+            ImGui.Begin("Maze Configuration", windowOptions);
 
             if (ImGui.BeginTabBar("Tab Bar", ImGuiTabBarFlags.None))
             {
@@ -143,6 +150,15 @@ namespace MazePlayground.App.MonoGame
                 .First();
             
             return new GridMazeConfig(_rowCount, _columnCount, algorithmType);
+        }
+
+        private RenderOptions GetRenderOptions()
+        {
+            return new RenderOptions
+            {
+                HighlightShortestPath = _highlightShortestPath, 
+                ShowAllDistances = _showDistances,
+            };
         }
     }
 }

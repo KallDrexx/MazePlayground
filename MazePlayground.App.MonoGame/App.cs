@@ -1,7 +1,4 @@
-using System;
-using ImGuiNET;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Num = System.Numerics;
 
 namespace MazePlayground.App.MonoGame
@@ -31,7 +28,7 @@ namespace MazePlayground.App.MonoGame
             _imGuiRenderer = new ImGuiRenderer(this);
             _imGuiRenderer.RebuildFontAtlas();
             
-            _mazeConfigWindow = new MazeConfigWindow();
+            _mazeConfigWindow = new MazeConfigWindow(_graphics.GraphicsDevice);
             _mazeRenderer = new MazeRenderer(_graphics.GraphicsDevice);
             _logicController = new LogicController(_mazeConfigWindow, _mazeRenderer);
 

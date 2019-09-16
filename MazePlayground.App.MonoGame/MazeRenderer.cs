@@ -80,9 +80,12 @@ namespace MazePlayground.App.MonoGame
 
         public void ResetMazePositionAndScaling()
         {
+            const int buffer = 15;
+            
             if (_currentMazeTexture != null)
             {
-                _renderTarget = new Rectangle(0, 0, _currentMazeTexture.Width, _currentMazeTexture.Height);
+                var startX = MazeConfigWindow.WindowWidth + buffer;
+                _renderTarget = new Rectangle(startX, buffer, _currentMazeTexture.Width, _currentMazeTexture.Height);
             }
         }
 
