@@ -11,7 +11,7 @@ namespace MazePlayground.Common.Mazes
         private readonly Dictionary<Cell, int> _cellIndexMap = new Dictionary<Cell, int>();
         
         public enum Direction { North, South, East, West }
-        public enum WallSetupAlgorithm { AldousBroder, BinaryTree, Sidewinder }
+        public enum WallSetupAlgorithm { AldousBroder, BinaryTree, Sidewinder, Wilson }
 
         public Cell[] Cells { get; }
         public int RowCount { get; }
@@ -135,6 +135,10 @@ namespace MazePlayground.Common.Mazes
                     SetupWallsAldousBroder();
                     break;
                 
+                case WallSetupAlgorithm.Wilson:
+                    SetupWallsWilson();
+                    break;
+                
                 default:
                     throw new NotSupportedException($"Algorithm {setupAlgorithm} not supported");
             }
@@ -142,6 +146,9 @@ namespace MazePlayground.Common.Mazes
 
         private void SetupWallsBinaryTree()
         {
+            // Visit each cell in order, give it a 50% chance of carving out the east or north wall.  North row
+            // should be all east and east row should be all north.
+            
             for (var row = 0; row < RowCount; row++)
             for (var column = 0; column < ColumnCount; column++)
             {
@@ -167,6 +174,11 @@ namespace MazePlayground.Common.Mazes
 
         private void SetupWallsSidewinder()
         {
+            // Iterate through each cell row by row.  Give the cell a 50% chance of carving out the east wall.  If
+            // an east wall is carved out add it to a list and go to the next cell in the row.  If an east wall is not
+            // carved out then pick a random cell from the list and carve north, then clear the list.  North wall should
+            // be all carved out all east.
+            
             void LinkRandomCellFromSet(List<Cell> cells)
             {
                 var index = _random.Next(0, cells.Count);
@@ -217,6 +229,9 @@ namespace MazePlayground.Common.Mazes
 
         private void SetupWallsAldousBroder()
         {
+            // Start with a cell and carve a path through all other cells until every cell has been visited.  Only
+            // carve out walls of a cell the first time it is visited.
+            
             var visitedCells = new HashSet<Cell>();
             var currentCell = Cells[0];
             visitedCells.Add(currentCell);
@@ -240,6 +255,91 @@ namespace MazePlayground.Common.Mazes
                 }
 
                 currentCell = nextCell;
+            }
+        }
+
+        private void SetupWallsWilson()
+        {
+            // Start with one cell marked as visited.  Pick a random non-visited cell and create a path of cells until
+            // we get to a visited cell.  Carve out a path through the path to the visited cell, then repeat until all
+            // cells are visited.  If a path loops around reset the path at the beginning of the loop.
+            
+            void OpenCellInPath(Cell firstCell, Cell secondCell, HashSet<Cell> hashSet, HashSet<Cell> cells, List<int> ints)
+            {
+                var direction = GetDirectionOfCells(firstCell, secondCell);
+                OpenCellWall(firstCell, secondCell, direction);
+
+                hashSet.Add(firstCell);
+                cells.Remove(firstCell);
+                ints.Remove(_cellIndexMap[firstCell]);
+            }
+
+            var visitedCells = new HashSet<Cell>();
+            var unvisitedCells = new HashSet<Cell>(Cells);
+            var unvisitedCellIndexes = Enumerable.Range(1, Cells.Length - 1).ToList();
+            var currentPath = new List<Cell>();
+
+            visitedCells.Add(Cells[0]);
+            unvisitedCells.Remove(Cells[0]);
+
+            var currentCellIndex = unvisitedCellIndexes[_random.Next(0, unvisitedCellIndexes.Count)];
+            var currentCell = Cells[currentCellIndex];
+            currentPath.Add(currentCell);
+            while (true)
+            {
+                var cellIndex = _cellIndexMap[currentCell];
+                var currentPosition = GetPositionFromIndex(cellIndex);
+                
+                var directions = new List<Direction>();
+                if (currentPosition.row != 0) directions.Add(Direction.North);
+                if (currentPosition.column != 0) directions.Add(Direction.West);
+                if (currentPosition.row < RowCount - 1) directions.Add(Direction.South);
+                if (currentPosition.column < ColumnCount - 1) directions.Add(Direction.East);
+                
+                var nextDirection = directions[_random.Next(0, directions.Count)];
+                var nextCell = GetCellInDirection(currentPosition.row, currentPosition.column, nextDirection);
+
+                if (visitedCells.Contains(nextCell))
+                {
+                    // Walk the path
+                    for (var x = 1; x < currentPath.Count; x++)
+                    {
+                        var firstCell = currentPath[x - 1];
+                        var secondCell = currentPath[x];
+                        OpenCellInPath(firstCell, secondCell, visitedCells, unvisitedCells, unvisitedCellIndexes);
+                    }
+                    
+                    OpenCellInPath(currentCell, nextCell, visitedCells, unvisitedCells, unvisitedCellIndexes);
+
+                    // Path completed, pick the next cell to start a new path
+                    if (unvisitedCellIndexes.Count == 0)
+                    {
+                        break;
+                    }
+                    
+                    currentCellIndex = unvisitedCellIndexes[_random.Next(0, unvisitedCellIndexes.Count)];
+                    currentCell = Cells[currentCellIndex];
+                    currentPath.Clear();
+                }
+                else
+                {
+                    var indexInPath = currentPath.IndexOf(nextCell);
+                    if (indexInPath >= 0)
+                    {
+                        // We looped around.  Remove the loop from the path
+                        for (var x = currentPath.Count - 1; x > indexInPath; x--)
+                        {
+                            currentPath.RemoveAt(x);
+                        }
+                    }
+                    else
+                    {
+                        // Newly seen cell
+                        currentPath.Add(nextCell);
+                    }
+
+                    currentCell = nextCell;
+                }
             }
         }
         
@@ -298,6 +398,29 @@ namespace MazePlayground.Common.Mazes
             }
 
             return farthestCell;
+        }
+
+        private Direction GetDirectionOfCells(Cell source, Cell target)
+        {
+            if (source == target) throw new ArgumentException("Both cells are the same!");
+            
+            var sourcePosition = GetPositionFromIndex(_cellIndexMap[source]);
+            var targetPosition = GetPositionFromIndex(_cellIndexMap[target]);
+
+            var rowDifference = targetPosition.row - sourcePosition.row;
+            var colDifference = targetPosition.column - sourcePosition.column;
+
+            if (Math.Abs(rowDifference) > 1 ||
+                Math.Abs(colDifference) > 1 ||
+                (rowDifference != 0 && colDifference != 0))
+            {
+                throw new ArgumentException("Cells are not adjacent");
+            }
+
+            if (rowDifference == 1) return Direction.South;
+            if (rowDifference == -1) return Direction.North;
+            if (colDifference == 1) return Direction.East;
+            return Direction.West;
         }
     }
 }
