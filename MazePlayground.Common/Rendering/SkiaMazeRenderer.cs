@@ -12,7 +12,7 @@ namespace MazePlayground.Common.Rendering
             const int margin = 10;
             const int cellLineWidth = 1;
             const int cellSize = 25;
-            const int labelMarginX = (int) (cellSize * 0.33);
+            const int labelMarginX = (int) (cellSize * 0.25);
             const int labelMarginY = (int) (cellSize * 0.75);
             
             if (maze == null) throw new ArgumentNullException(nameof(maze));
@@ -40,22 +40,27 @@ namespace MazePlayground.Common.Rendering
                     var topY = (row * cellSize) + margin;
                     var bottomY = topY + cellSize;
 
-                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.North) == null)
+                    var isNorthFacingExit = (maze.FinishingCell == cell || maze.StartingCell == cell) && row == 0 && column > 1;
+                    var isSouthFacingExit = (maze.FinishingCell == cell || maze.StartingCell == cell) && row == maze.RowCount - 1 && column > 1;
+                    var isEastFacingExit = (maze.FinishingCell == cell || maze.StartingCell == cell) && column == maze.ColumnCount - 1;
+                    var isWestFacingExit = (maze.FinishingCell == cell || maze.StartingCell == cell) && column == 0;
+
+                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.North) == null && !isNorthFacingExit)
                     {
                         surface.Canvas.DrawLine(leftX, topY, rightX, topY, whitePaint);
                     }
 
-                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.South) == null)
+                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.South) == null && !isSouthFacingExit)
                     {
                         surface.Canvas.DrawLine(leftX, bottomY, rightX, bottomY, whitePaint);
                     }
 
-                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.East) == null)
+                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.East) == null && !isEastFacingExit)
                     {
                         surface.Canvas.DrawLine(rightX, topY, rightX, bottomY, whitePaint);
                     }
 
-                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.West) == null)
+                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.West) == null && !isWestFacingExit)
                     {
                         surface.Canvas.DrawLine(leftX, topY, leftX, bottomY, whitePaint);
                     }
