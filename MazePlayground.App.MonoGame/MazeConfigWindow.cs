@@ -75,21 +75,18 @@ namespace MazePlayground.App.MonoGame
             ImGui.SetNextWindowSize(new Vector2(WindowWidth, _graphicsDevice.Viewport.Height));
             ImGui.Begin("Maze Configuration", windowOptions);
 
-            if (ImGui.BeginTabBar("Tab Bar", ImGuiTabBarFlags.None))
+            if (ImGui.CollapsingHeader("Generation", ImGuiTreeNodeFlags.DefaultOpen))
             {
-                if (ImGui.BeginTabItem("Generation"))
-                {
-                    RenderGenerationTab();
-                    ImGui.EndTabItem();
-                }
+                RenderGenerationTab();
+            }
+            
+            ImGui.Spacing();
+            ImGui.Spacing();
+            ImGui.Spacing();
 
-                if (ImGui.BeginTabItem("Rendering"))
-                {
-                    RenderRenderingOptionsTab();
-                    ImGui.EndTabItem();
-                }
-                
-                ImGui.EndTabBar();
+            if (ImGui.CollapsingHeader("Rendering", ImGuiTreeNodeFlags.DefaultOpen))
+            {
+                RenderRenderingOptionsTab();
             }
             
             WindowHasFocus = ImGui.IsWindowFocused();
