@@ -11,7 +11,7 @@ namespace MazePlayground.Common.Mazes
         private readonly Dictionary<Cell, int> _cellIndexMap = new Dictionary<Cell, int>();
         
         public enum Direction { North, South, East, West }
-        public enum WallSetupAlgorithm { AldousBroder, BinaryTree, Sidewinder, Wilson }
+        public enum WallSetupAlgorithm { AldousBroder, BinaryTree, HuntAndKill, Sidewinder, Wilson }
 
         public Cell[] Cells { get; }
         public int RowCount { get; }
@@ -137,6 +137,10 @@ namespace MazePlayground.Common.Mazes
                 
                 case WallSetupAlgorithm.Wilson:
                     SetupWallsWilson();
+                    break;
+                
+                case WallSetupAlgorithm.HuntAndKill:
+                    SetupWallsHuntAndKill();
                     break;
                 
                 default:
@@ -342,6 +346,100 @@ namespace MazePlayground.Common.Mazes
                 }
             }
         }
+
+        private void SetupWallsHuntAndKill()
+        {
+            // Start from the bottom left cell, carve out a random path only going through other unvisited cells.  If
+            // we get stuck (all neighbors are visited cells) then pick the top-left most unvisited cell that borders a
+            // a visited, link the two cells, and carve a new path until we hit another visited cell.  Repeat.
+            
+            var visitedCells = new HashSet<Cell>();
+            var currentCell = GetCell(RowCount - 1, 0);
+            visitedCells.Add(currentCell);
+            while (visitedCells.Count < Cells.Length)
+            {
+                var currentPosition = GetPositionOfCell(currentCell);
+                var adjacentCells = new[]
+                    {
+                        GetCellInDirection(currentPosition.row, currentPosition.column, Direction.North),
+                        GetCellInDirection(currentPosition.row, currentPosition.column, Direction.South),
+                        GetCellInDirection(currentPosition.row, currentPosition.column, Direction.East),
+                        GetCellInDirection(currentPosition.row, currentPosition.column, Direction.West),
+                    }
+                    .Where(x => x != null)
+                    .Where(x => !visitedCells.Contains(x))
+                    .ToArray();
+
+                if (adjacentCells.Length == 0)
+                {
+                    // We got caught in a loop
+                    var newCellFound = false;
+                    for (var index = 0; index < Cells.Length; index++)
+                    {
+                        var cell = Cells[index];
+                        if (visitedCells.Contains(cell))
+                        {
+                            continue;
+                        }
+                        
+                        var position = GetPositionOfCell(cell);
+                        var northernCell = GetCellInDirection(position.row, position.column, Direction.North);
+                        if (northernCell != null && visitedCells.Contains(northernCell))
+                        {
+                            OpenCellWall(cell, northernCell, Direction.North);
+                            currentCell = cell;
+                            newCellFound = true;
+                            break;
+                        }
+                        
+                        var southernCell = GetCellInDirection(position.row, position.column, Direction.South);
+                        if (southernCell != null && visitedCells.Contains(southernCell))
+                        {
+                            OpenCellWall(cell, southernCell, Direction.South);
+                            currentCell = cell;
+                            newCellFound = true;
+                            break;
+                        }
+
+                        var easternCell = GetCellInDirection(position.row, position.column, Direction.East);
+                        if (easternCell != null && visitedCells.Contains(easternCell))
+                        {
+                            OpenCellWall(cell, easternCell, Direction.East);
+                            currentCell = cell;
+                            newCellFound = true;
+                            break;
+                        }
+                        
+                        var westernCell = GetCellInDirection(position.row, position.column, Direction.West);
+                        if (westernCell != null && visitedCells.Contains(westernCell))
+                        {
+                            OpenCellWall(cell, westernCell, Direction.West);
+                            currentCell = cell;
+                            newCellFound = true;
+                            break;
+                        }
+                        
+                        // No neighbors that have been visited, so go try the next
+                    }
+
+                    if (!newCellFound)
+                    {
+                        throw new InvalidOperationException("Could not find any unvisited cells with adjacent visited cells");
+                    }
+                }
+                else
+                {
+                    var index = _random.Next(0, adjacentCells.Length);
+                    var nextCell = adjacentCells[index];
+                    var direction = GetDirectionOfCells(currentCell, nextCell);
+                    OpenCellWall(currentCell, nextCell, direction);
+
+                    currentCell = nextCell;
+                }
+                
+                visitedCells.Add(currentCell);
+            }
+        }
         
         private (int row, int column) GetPositionFromIndex(int index)
         {
@@ -353,6 +451,11 @@ namespace MazePlayground.Common.Mazes
 
         private Cell GetCell(int row, int column)
         {
+            if (row < 0 || column < 0 || row >= RowCount || column >= ColumnCount)
+            {
+                return null;
+            }
+            
             var index = (row * ColumnCount) + column;
 
             return index >= 0 && index < Cells.Length
