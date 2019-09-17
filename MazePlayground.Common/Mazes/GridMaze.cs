@@ -362,13 +362,11 @@ namespace MazePlayground.Common.Mazes
 
         private void SetStartingAndEndingCells()
         {
-            var distanceInfo = CellDistanceSolver.GetDistancesFromCell(Cells[0]);
-            FinishingCell = FindFarthestEdgeCell(distanceInfo);
+            var startingRow = _random.Next(0, RowCount);
+            StartingCell = GetCell(startingRow, 0);
             
-            // Find the farthest cell on the left from the farthest cell found from the root, so we always start
-            // on the left hand side.
-            distanceInfo = CellDistanceSolver.GetDistancesFromCell(FinishingCell);
-            StartingCell = FindFarthestEdgeCell(distanceInfo, true);
+            var distanceInfo = CellDistanceSolver.GetDistancesFromCell(StartingCell);
+            FinishingCell = FindFarthestEdgeCell(distanceInfo);
         }
 
         private Cell FindFarthestEdgeCell(DistanceInfo distanceInfo, bool onlyLeftEdge = false)
