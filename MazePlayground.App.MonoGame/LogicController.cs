@@ -1,4 +1,5 @@
 using MazePlayground.App.MonoGame.Config;
+using MazePlayground.Common.Mazes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
@@ -28,12 +29,7 @@ namespace MazePlayground.App.MonoGame
         {
             if (_mazeConfigWindow.GenerateButtonPressed)
             {
-                switch (_mazeConfigWindow.MazeType)
-                {
-                    case MazeType.Grid:
-                        _mazeRenderer.LoadMaze(_mazeConfigWindow.GridMazeConfig);
-                        break;
-                }
+                GenerateMaze();
             }
 
             if (_mazeConfigWindow.RenderingOptionsChanged)
@@ -91,6 +87,19 @@ namespace MazePlayground.App.MonoGame
             {
                 _mazeConfigWindow.ToggleMetricsWindow();
                 _f2WasDown = false;
+            }
+        }
+
+        private void GenerateMaze()
+        {
+            switch (_mazeConfigWindow.MazeType)
+            {
+                case MazeType.Grid:
+                    var config = _mazeConfigWindow.GridMazeConfig;
+                    var maze = new GridMaze(config.RowCount, config.ColumnCount, config.WallSetupAlgorithm);
+                    _mazeRenderer.LoadMaze(maze);
+                    _mazeConfigWindow.SetMazeStats(maze.Stats);
+                    break;
             }
         }
     }

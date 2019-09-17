@@ -39,16 +39,16 @@ namespace MazePlayground.App.MonoGame
             }
         }
 
-        public void LoadMaze(GridMazeConfig config)
+        public IMaze LoadMaze(IMaze maze)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
-
-            _currentMaze = new GridMaze(config.RowCount, config.ColumnCount, config.WallSetupAlgorithm);
+            _currentMaze = maze;
             _mazeDistanceInfo = CellDistanceSolver.GetDistancesFromCell(_currentMaze.StartingCell);
             _mazeShortestPathInfo = ShortestPathSolver.Solve(_currentMaze.FinishingCell, _mazeDistanceInfo);
             
             UpdateMazeRendering();
             ResetMazePositionAndScaling();
+
+            return _currentMaze;
         }
 
         public void MoveRenderedMaze(Point moveBy)

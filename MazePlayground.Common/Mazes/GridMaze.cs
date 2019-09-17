@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using MazePlayground.Common.Solvers;
 
@@ -9,6 +10,7 @@ namespace MazePlayground.Common.Mazes
     {
         private readonly Random _random = new Random();
         private readonly Dictionary<Cell, int> _cellIndexMap = new Dictionary<Cell, int>();
+        private readonly List<KeyValuePair<string, string>> _stats = new List<KeyValuePair<string, string>>();
         
         public enum Direction { North, South, East, West }
         public enum WallSetupAlgorithm { AldousBroder, BinaryTree, HuntAndKill, Sidewinder, Wilson }
@@ -18,6 +20,7 @@ namespace MazePlayground.Common.Mazes
         public int ColumnCount { get; }
         public Cell StartingCell { get; private set; }
         public Cell FinishingCell { get; private set; }
+        public IReadOnlyList<KeyValuePair<string, string>> Stats => _stats;
 
         public GridMaze(int rowCount, int columnCount, WallSetupAlgorithm setupAlgorithm)
         {
@@ -35,8 +38,29 @@ namespace MazePlayground.Common.Mazes
                 _cellIndexMap[cell] = index;
             }
             
+            _stats.Add(new KeyValuePair<string, string>("Algorithm:", setupAlgorithm.ToString()));
+            _stats.Add(new KeyValuePair<string, string>("Rows:", rowCount.ToString()));
+            _stats.Add(new KeyValuePair<string, string>("Columns:", columnCount.ToString()));
+            _stats.Add(new KeyValuePair<string, string>("Total Cells:", Cells.Length.ToString()));
+
+            var stopwatch = Stopwatch.StartNew();
             SetupWalls(setupAlgorithm);
+            stopwatch.Stop();
+            
             SetStartingAndEndingCells();
+
+            var deadEnds = 0;
+            foreach (var cell in Cells)
+            {
+                if (cell.LinkIdToCellMap.Count == 1)
+                {
+                    deadEnds++;
+                }
+            }
+
+            var percentage = (int) ((deadEnds / (decimal) Cells.Length) * 100);
+            _stats.Add(new KeyValuePair<string, string>("Dead Ends:", $"{deadEnds} ({percentage}%%)"));
+            _stats.Add(new KeyValuePair<string, string>("Wall Setup Time:", $"{stopwatch.ElapsedMilliseconds}ms"));
         }
 
         public (int row, int column) GetPositionOfCell(Cell cell)

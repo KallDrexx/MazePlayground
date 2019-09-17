@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using ImGuiNET;
@@ -27,6 +28,8 @@ namespace MazePlayground.App.MonoGame
 
         private bool _highlightShortestPath;
         private bool _showDistances;
+
+        private IReadOnlyList<KeyValuePair<string, string>> _mazeStats;
 
         public bool GenerateButtonPressed { get; private set; }
         public bool RenderingOptionsChanged { get; private set; }
@@ -61,6 +64,11 @@ namespace MazePlayground.App.MonoGame
         {
             _showMetricsWindow = !_showMetricsWindow;
         }
+
+        public void SetMazeStats(IReadOnlyList<KeyValuePair<string, string>> stats)
+        {
+            _mazeStats = stats;
+        }
         
         public void Render()
         {
@@ -89,6 +97,25 @@ namespace MazePlayground.App.MonoGame
                 RenderRenderingOptionsTab();
             }
             
+            ImGui.Spacing();
+            ImGui.Spacing();
+            ImGui.Spacing();
+
+            if (_mazeStats != null && _mazeStats.Any())
+            {
+                if (ImGui.CollapsingHeader("Maze Stats", ImGuiTreeNodeFlags.DefaultOpen))
+                {
+                    ImGui.Columns(2, "stats-columns", false);
+                    foreach (var stat in _mazeStats)
+                    {
+                        ImGui.Text(stat.Key);
+                        ImGui.NextColumn();
+                        ImGui.Text(stat.Value);
+                        ImGui.NextColumn();
+                    }
+                }
+            }
+
             WindowHasFocus = ImGui.IsWindowFocused();
             
             ImGui.End();
