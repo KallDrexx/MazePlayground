@@ -13,7 +13,7 @@ namespace MazePlayground.Common.Mazes
         private readonly List<KeyValuePair<string, string>> _stats = new List<KeyValuePair<string, string>>();
         
         public enum Direction { North, South, East, West }
-        public enum WallSetupAlgorithm { AldousBroder, BinaryTree, HuntAndKill, Sidewinder, Wilson }
+        public enum WallSetupAlgorithm { AldousBroder, BinaryTree, HuntAndKill, RecursiveBackTracker, Sidewinder, Wilson }
 
         public Cell[] Cells { get; }
         public int RowCount { get; }
@@ -165,6 +165,10 @@ namespace MazePlayground.Common.Mazes
                 
                 case WallSetupAlgorithm.HuntAndKill:
                     SetupWallsHuntAndKill();
+                    break;
+                
+                case WallSetupAlgorithm.RecursiveBackTracker:
+                    SetupWallsRecursiveBackTracker();
                     break;
                 
                 default:
@@ -462,6 +466,56 @@ namespace MazePlayground.Common.Mazes
                 }
                 
                 visitedCells.Add(currentCell);
+            }
+        }
+
+        private void SetupWallsRecursiveBackTracker()
+        {
+            // Start from the bottom left cell, carve out a random path only going through unvisited cells.  If
+            // we reach a dead end backtrack until we find a cell with an unvisited neighbor and continue
+            
+            var visitedCells = new HashSet<Cell>();
+            var path = new Stack<Cell>();
+            var currentCell = GetCell(RowCount - 1, 0);
+            visitedCells.Add(currentCell);
+            path.Push(currentCell);
+            while (true)
+            {
+                var currentPosition = GetPositionOfCell(currentCell);
+                var adjacentCells = new[]
+                    {
+                        (GetCellInDirection(currentPosition.row, currentPosition.column, Direction.North), Direction.North),
+                        (GetCellInDirection(currentPosition.row, currentPosition.column, Direction.South), Direction.South),
+                        (GetCellInDirection(currentPosition.row, currentPosition.column, Direction.East), Direction.East),
+                        (GetCellInDirection(currentPosition.row, currentPosition.column, Direction.West), Direction.West),
+                    }
+                    .Where(x => x.Item1 != null)
+                    .Where(x => !visitedCells.Contains(x.Item1))
+                    .ToArray();
+
+                if (adjacentCells.Length > 0)
+                {
+                    var (cell, direction) = adjacentCells[_random.Next(adjacentCells.Length)];
+                    OpenCellWall(currentCell, cell, direction);
+                    visitedCells.Add(cell);
+                    path.Push(cell);
+
+                    currentCell = cell;
+                }
+                else
+                {
+                    // No unvisited neighbors
+                    path.Pop();
+                    if (path.Any())
+                    {
+                        currentCell = path.Peek();
+                    }
+                    else
+                    {
+                        // All cells should now have visited neighbors
+                        break;
+                    }
+                }
             }
         }
         
