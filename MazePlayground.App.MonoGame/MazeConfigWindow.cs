@@ -19,8 +19,8 @@ namespace MazePlayground.App.MonoGame
         private readonly string[] _gridAlgorithmNames;
         private int _selectedMazeTypeIndex;
         
-        private int _rowCount = 20;
-        private int _columnCount = 20;
+        private int _rowCount = 29;
+        private int _columnCount = 29;
         private int _selectedWallSetupAlgorithmIndex;
 
         private bool _showDemoWindow;
@@ -28,6 +28,7 @@ namespace MazePlayground.App.MonoGame
 
         private bool _highlightShortestPath;
         private bool _showDistances;
+        private bool _shadeDistancesFromStart;
 
         private IReadOnlyList<KeyValuePair<string, string>> _mazeStats;
 
@@ -143,13 +144,16 @@ namespace MazePlayground.App.MonoGame
         {
             var originalHighlightShortestPath = _highlightShortestPath;
             var originalCellDistances = _showDistances;
+            var originalShadeDistances = _shadeDistancesFromStart;
             
             ImGui.Checkbox("Highlight shortest path", ref _highlightShortestPath);
             ImGui.Checkbox("Show cell distances", ref _showDistances);
+            ImGui.Checkbox("Shade distance from start", ref _shadeDistancesFromStart);
             ResetMazePositionPressed = ImGui.Button("Reset maze position");
 
             RenderingOptionsChanged = originalCellDistances != _showDistances ||
-                                      originalHighlightShortestPath != _highlightShortestPath;
+                                      originalHighlightShortestPath != _highlightShortestPath ||
+                                      originalShadeDistances != _shadeDistancesFromStart;
         }
 
         private MazeType GetMazeType()
@@ -182,6 +186,7 @@ namespace MazePlayground.App.MonoGame
             {
                 HighlightShortestPath = _highlightShortestPath, 
                 ShowAllDistances = _showDistances,
+                ShowGradientOfDistanceFromStart = _shadeDistancesFromStart,
             };
         }
     }

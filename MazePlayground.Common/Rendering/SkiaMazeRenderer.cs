@@ -65,6 +65,21 @@ namespace MazePlayground.Common.Rendering
                         surface.Canvas.DrawLine(leftX, topY, leftX, bottomY, whitePaint);
                     }
 
+                    if (renderOptions.ShowGradientOfDistanceFromStart)
+                    {
+                        const int shadingMargin = 2;
+                        
+                        var finishingCellDistance = distanceInfo.DistanceFromStartMap[distanceInfo.FarthestCell];
+                        var currentCellDistance = distanceInfo.DistanceFromStartMap[cell];
+                        var intensity = (byte)(255 * (currentCellDistance / (decimal)finishingCellDistance));
+                        var color = new SKColor(0, 0, intensity);
+                        var paint = new SKPaint {Color = color};
+                        var shadeWidth = rightX - leftX - (shadingMargin * 2);
+                        var shadeHeight = bottomY - topY - (shadingMargin * 2);
+                        
+                        surface.Canvas.DrawRect(leftX + shadingMargin, topY + shadingMargin, shadeWidth, shadeHeight, paint);
+                    }
+                    
                     if (renderOptions.HighlightShortestPath && shortestPathInfo.IsCellInPath(cell))
                     {
                         var paint = cell == maze.StartingCell ? startPaint

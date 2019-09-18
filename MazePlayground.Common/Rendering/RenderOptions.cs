@@ -4,5 +4,6 @@ namespace MazePlayground.Common.Rendering
     {
         public bool HighlightShortestPath { get; set; }
         public bool ShowAllDistances { get; set; }
+        public bool ShowGradientOfDistanceFromStart { get; set; }
     }
 }
