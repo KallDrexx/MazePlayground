@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using MazePlayground.Common.Solvers;
+using MazePlayground.Common.WallSetupAlgorithms;
 
 namespace MazePlayground.Common.Mazes
 {
@@ -21,6 +22,7 @@ namespace MazePlayground.Common.Mazes
         public Cell StartingCell { get; private set; }
         public Cell FinishingCell { get; private set; }
         public IReadOnlyList<KeyValuePair<string, string>> Stats => _stats;
+        public IReadOnlyList<Cell> AllCells => Cells;
 
         public GridMaze(int rowCount, int columnCount, WallSetupAlgorithm setupAlgorithm)
         {
@@ -78,6 +80,24 @@ namespace MazePlayground.Common.Mazes
                 ? otherCell
                 : null;
         }
+
+        public IReadOnlyList<CellWall> GetWallsForCell(Cell cell)
+        {
+            if (cell == null) throw new ArgumentNullException(nameof(cell));
+
+            var (row, column) = GetPositionOfCell(cell);
+            return new[] {Direction.North, Direction.East, Direction.South, Direction.West}
+                .Select(x => new CellWall(GetLinkIdForDirection(x), GetCellInDirection(row, column, x)))
+                .Where(x => x.CellOnOtherSide != null)
+                .ToArray();
+        }
+
+        public byte GetOppositeLinkId(byte linkId)
+        {
+            var direction = GetDirectionForLinkId(linkId);
+            var oppositeDirection = GetOppositeDirection(direction);
+            return GetLinkIdForDirection(oppositeDirection);
+        }
         
         private Cell GetCellInDirection(int row, int column, Direction direction)
         {
@@ -133,6 +153,20 @@ namespace MazePlayground.Common.Mazes
                     throw new NotSupportedException($"Unsupported direction {direction}");
             }
         }
+
+        private static Direction GetDirectionForLinkId(byte linkId)
+        {
+            switch (linkId)
+            {
+                case 1: return Direction.North;
+                case 2: return Direction.South;
+                case 3: return Direction.East;
+                case 4: return Direction.West;
+                
+                default:
+                    throw new NotSupportedException($"Link id {linkId} not supported");
+            }
+        }
         
         private static void OpenCellWall(Cell first, Cell second, Direction linkDirection)
         {
@@ -178,85 +212,12 @@ namespace MazePlayground.Common.Mazes
 
         private void SetupWallsBinaryTree()
         {
-            // Visit each cell in order, give it a 50% chance of carving out the east or north wall.  North row
-            // should be all east and east row should be all north.
-            
-            for (var row = 0; row < RowCount; row++)
-            for (var column = 0; column < ColumnCount; column++)
-            {
-                var cell = GetCell(row, column);
-                if (row == 0 && column != ColumnCount - 1)
-                {
-                    var eastCell = GetCellInDirection(row, column, Direction.East);
-                    OpenCellWall(cell, eastCell, Direction.East);
-                }
-                else if (row != 0 && column == ColumnCount - 1)
-                {
-                    var northCell = GetCellInDirection(row, column, Direction.North);
-                    OpenCellWall(cell, northCell, Direction.North);
-                }
-                else if (row != 0 && column != ColumnCount - 1)
-                {
-                    var direction = _random.Next(0, 2) == 0 ? Direction.East : Direction.North;
-                    var otherCell = GetCellInDirection(row, column, direction);
-                    OpenCellWall(cell, otherCell, direction);
-                }
-            }
+            new BinaryTree().Run(this);
         }
 
         private void SetupWallsSidewinder()
         {
-            // Iterate through each cell row by row.  Give the cell a 50% chance of carving out the east wall.  If
-            // an east wall is carved out add it to a list and go to the next cell in the row.  If an east wall is not
-            // carved out then pick a random cell from the list and carve north, then clear the list.  North wall should
-            // be all carved out all east.
-            
-            void LinkRandomCellFromSet(List<Cell> cells)
-            {
-                var index = _random.Next(0, cells.Count);
-                var position = GetPositionFromIndex(_cellIndexMap[cells[index]]);
-                var southCell = GetCell(position.row, position.column);
-                var northCell = GetCellInDirection(position.row, position.column, Direction.North);
-                OpenCellWall(southCell, northCell, Direction.North);
-                cells.Clear();
-            }
-
-            var rowSet = new List<Cell>();
-            for (var row = 0; row < RowCount; row++)
-            {
-                for (var column = 0; column < ColumnCount; column++)
-                {
-                    var cell = GetCell(row, column);
-                    if (row == 0)
-                    {
-                        if (column != ColumnCount - 1)
-                        {
-                            var eastCell = GetCellInDirection(row, column, Direction.East);
-                            OpenCellWall(cell, eastCell, Direction.East);
-                        }
-                    }
-                    else
-                    {
-                        rowSet.Add(cell);
-                        
-                        var carveEast = column < ColumnCount - 1 && _random.Next(0, 2) == 0;
-                        if (carveEast)
-                        {
-                            var eastCell = GetCellInDirection(row, column, Direction.East);
-                            OpenCellWall(cell, eastCell, Direction.East);
-                        }
-                        else
-                        {
-                            LinkRandomCellFromSet(rowSet);
-                        }
-                    }
-                }
-
-                if (rowSet.Any())
-                {
-                    LinkRandomCellFromSet(rowSet);
-                }
-            }
+            new Sidewinder().Run(this);
         }
 
         private void SetupWallsAldousBroder()
