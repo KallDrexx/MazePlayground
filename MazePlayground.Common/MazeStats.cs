@@ -32,9 +32,9 @@ namespace MazePlayground.Common
         {
             switch (maze)
             {
-                case GridMaze gridMaze:
-                    AddStat("Rows", gridMaze.RowCount.ToString());
-                    AddStat("Columns", gridMaze.ColumnCount.ToString());
+                case RectangularMaze rectangularMaze:
+                    AddStat("Rows", rectangularMaze.RowCount.ToString());
+                    AddStat("Columns", rectangularMaze.ColumnCount.ToString());
                     break;
             }
         }

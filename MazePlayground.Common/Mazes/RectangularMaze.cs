@@ -7,7 +7,7 @@ using MazePlayground.Common.WallSetup;
 
 namespace MazePlayground.Common.Mazes
 {
-    public class GridMaze : IMaze
+    public class RectangularMaze : IMaze
     {
         private readonly Random _random = new Random();
         private readonly Dictionary<Cell, int> _cellIndexMap = new Dictionary<Cell, int>();
@@ -21,7 +21,7 @@ namespace MazePlayground.Common.Mazes
         public Cell FinishingCell { get; private set; }
         public IReadOnlyList<Cell> AllCells => Cells;
 
-        public GridMaze(int rowCount, int columnCount, WallSetupAlgorithm setupAlgorithm)
+        public RectangularMaze(int rowCount, int columnCount, WallSetupAlgorithm setupAlgorithm)
         {
             RowCount = rowCount;
             ColumnCount = columnCount;

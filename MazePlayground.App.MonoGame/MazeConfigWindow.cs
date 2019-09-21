@@ -39,7 +39,7 @@ namespace MazePlayground.App.MonoGame
         public bool ResetMazePositionPressed { get; private set; }
         
         public MazeType MazeType => GetMazeType();
-        public GridMazeConfig GridMazeConfig => GetGridMazeConfig();
+        public RectangularMazeConfig RectangularMazeConfig => GetRectangularMazeConfig();
         public RenderOptions RenderingOptions => GetRenderOptions();
 
         public MazeConfigWindow(GraphicsDevice graphicsDevice)
@@ -165,7 +165,7 @@ namespace MazePlayground.App.MonoGame
                 .First();
         }
 
-        private GridMazeConfig GetGridMazeConfig()
+        private RectangularMazeConfig GetRectangularMazeConfig()
         {
             if (_selectedMazeTypeIndex != 0)
             {
@@ -178,7 +178,7 @@ namespace MazePlayground.App.MonoGame
                 .Skip(_selectedWallSetupAlgorithmIndex)
                 .First();
             
-            return new GridMazeConfig(_rowCount, _columnCount, algorithmType);
+            return new RectangularMazeConfig(_rowCount, _columnCount, algorithmType);
         }
 
         private RenderOptions GetRenderOptions()

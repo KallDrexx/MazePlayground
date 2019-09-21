@@ -101,10 +101,10 @@ namespace MazePlayground.App.MonoGame
                 return;
             }
             
-            if (_currentMaze is GridMaze gridMaze)
+            if (_currentMaze is RectangularMaze rectangularMaze)
             {
                 var stopwatch = Stopwatch.StartNew();
-                using (var image = SkiaMazeRenderer.Render(gridMaze, _renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo))
+                using (var image = SkiaMazeRenderer.Render(rectangularMaze, _renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo))
                 {
                     RenderImageToTexture2D(image);
                 }

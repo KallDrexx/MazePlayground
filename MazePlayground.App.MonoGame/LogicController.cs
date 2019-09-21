@@ -97,10 +97,10 @@ namespace MazePlayground.App.MonoGame
             switch (_mazeConfigWindow.MazeType)
             {
                 case MazeType.Grid:
-                    var config = _mazeConfigWindow.GridMazeConfig;
+                    var config = _mazeConfigWindow.RectangularMazeConfig;
                     
                     var stopwatch = Stopwatch.StartNew();
-                    var maze = new GridMaze(config.RowCount, config.ColumnCount, config.WallSetupAlgorithm);
+                    var maze = new RectangularMaze(config.RowCount, config.ColumnCount, config.WallSetupAlgorithm);
                     stopwatch.Stop();
                     
                     var stats = new MazeStats(maze, config.WallSetupAlgorithm);

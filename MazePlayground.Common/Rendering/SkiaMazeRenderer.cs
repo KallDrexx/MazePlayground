@@ -7,7 +7,7 @@ namespace MazePlayground.Common.Rendering
 {
     public static class SkiaMazeRenderer
     {
-        public static SKImage Render(GridMaze maze, RenderOptions renderOptions, DistanceInfo distanceInfo, ShortestPathInfo shortestPathInfo)
+        public static SKImage Render(RectangularMaze maze, RenderOptions renderOptions, DistanceInfo distanceInfo, ShortestPathInfo shortestPathInfo)
         {
             const int margin = 10;
             const int cellLineWidth = 1;
@@ -45,22 +45,22 @@ namespace MazePlayground.Common.Rendering
                     var isEastFacingExit = (maze.FinishingCell == cell || maze.StartingCell == cell) && column == maze.ColumnCount - 1;
                     var isWestFacingExit = (maze.FinishingCell == cell || maze.StartingCell == cell) && column == 0;
 
-                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.North) == null && !isNorthFacingExit)
+                    if (maze.GetCellLinkedInDirection(cell, RectangularMaze.Direction.North) == null && !isNorthFacingExit)
                     {
                         surface.Canvas.DrawLine(leftX, topY, rightX, topY, whitePaint);
                     }
 
-                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.South) == null && !isSouthFacingExit)
+                    if (maze.GetCellLinkedInDirection(cell, RectangularMaze.Direction.South) == null && !isSouthFacingExit)
                     {
                         surface.Canvas.DrawLine(leftX, bottomY, rightX, bottomY, whitePaint);
                     }
 
-                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.East) == null && !isEastFacingExit)
+                    if (maze.GetCellLinkedInDirection(cell, RectangularMaze.Direction.East) == null && !isEastFacingExit)
                     {
                         surface.Canvas.DrawLine(rightX, topY, rightX, bottomY, whitePaint);
                     }
 
-                    if (maze.GetCellLinkedInDirection(cell, GridMaze.Direction.West) == null && !isWestFacingExit)
+                    if (maze.GetCellLinkedInDirection(cell, RectangularMaze.Direction.West) == null && !isWestFacingExit)
                     {
                         surface.Canvas.DrawLine(leftX, topY, leftX, bottomY, whitePaint);
                     }
