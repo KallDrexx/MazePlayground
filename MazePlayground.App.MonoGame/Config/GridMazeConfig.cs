@@ -1,4 +1,4 @@
-using MazePlayground.Common.Mazes;
+using MazePlayground.Common.WallSetup;
 
 namespace MazePlayground.App.MonoGame.Config
 {
@@ -6,9 +6,9 @@ namespace MazePlayground.App.MonoGame.Config
     {
         public int RowCount { get; }
         public int ColumnCount { get; }
-        public GridMaze.WallSetupAlgorithm WallSetupAlgorithm { get; }
+        public WallSetupAlgorithm WallSetupAlgorithm { get; }
 
-        public GridMazeConfig(int rowCount, int columnCount, GridMaze.WallSetupAlgorithm wallSetupAlgorithm)
+        public GridMazeConfig(int rowCount, int columnCount, WallSetupAlgorithm wallSetupAlgorithm)
         {
             RowCount = rowCount;
             ColumnCount = columnCount;

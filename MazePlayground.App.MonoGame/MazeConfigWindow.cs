@@ -6,6 +6,7 @@ using ImGuiNET;
 using MazePlayground.App.MonoGame.Config;
 using MazePlayground.Common.Mazes;
 using MazePlayground.Common.Rendering;
+using MazePlayground.Common.WallSetup;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace MazePlayground.App.MonoGame
@@ -50,8 +51,8 @@ namespace MazePlayground.App.MonoGame
                 .Select(x => x.ToString())
                 .ToArray();
 
-            _gridAlgorithmNames = Enum.GetValues(typeof(GridMaze.WallSetupAlgorithm))
-                .Cast<GridMaze.WallSetupAlgorithm>()
+            _gridAlgorithmNames = Enum.GetValues(typeof(WallSetupAlgorithm))
+                .Cast<WallSetupAlgorithm>()
                 .Select(x => x.ToString())
                 .ToArray();
         }
@@ -172,8 +173,8 @@ namespace MazePlayground.App.MonoGame
                 return null;
             }
 
-            var algorithmType = Enum.GetValues(typeof(GridMaze.WallSetupAlgorithm))
-                .Cast<GridMaze.WallSetupAlgorithm>()
+            var algorithmType = Enum.GetValues(typeof(WallSetupAlgorithm))
+                .Cast<WallSetupAlgorithm>()
                 .Skip(_selectedWallSetupAlgorithmIndex)
                 .First();
             

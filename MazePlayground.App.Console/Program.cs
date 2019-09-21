@@ -3,6 +3,7 @@ using MazePlayground.Common;
 using MazePlayground.Common.Mazes;
 using MazePlayground.Common.Rendering;
 using MazePlayground.Common.Solvers;
+using MazePlayground.Common.WallSetup;
 using SkiaSharp;
 
 namespace MazePlayground.App.Console
@@ -13,7 +14,7 @@ namespace MazePlayground.App.Console
         {
             const string pngFileName = "rendering.png";
             
-            var maze = new GridMaze(20, 20, GridMaze.WallSetupAlgorithm.Sidewinder);
+            var maze = new GridMaze(20, 20, WallSetupAlgorithm.Sidewinder);
             var mazeDistanceInfo = CellDistanceSolver.GetDistancesFromCell(maze.StartingCell);
             var mazeShortestPathInfo = ShortestPathSolver.Solve(maze.FinishingCell, mazeDistanceInfo);
             using (var image = SkiaMazeRenderer.Render(maze, null, mazeDistanceInfo, mazeShortestPathInfo))

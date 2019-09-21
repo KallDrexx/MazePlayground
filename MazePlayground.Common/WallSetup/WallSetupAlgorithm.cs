@@ -1,4 +1,4 @@
-namespace MazePlayground.Common.WallSetupAlgorithms
+namespace MazePlayground.Common.WallSetup
 {
     public enum WallSetupAlgorithm
     {

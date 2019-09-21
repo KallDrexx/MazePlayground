@@ -1,4 +1,5 @@
 using MazePlayground.App.MonoGame.Config;
+using MazePlayground.Common;
 using MazePlayground.Common.Mazes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -98,7 +99,8 @@ namespace MazePlayground.App.MonoGame
                     var config = _mazeConfigWindow.GridMazeConfig;
                     var maze = new GridMaze(config.RowCount, config.ColumnCount, config.WallSetupAlgorithm);
                     _mazeRenderer.LoadMaze(maze);
-                    _mazeConfigWindow.SetMazeStats(maze.Stats);
+                    var stats = new MazeStats(maze, config.WallSetupAlgorithm);
+                    _mazeConfigWindow.SetMazeStats(stats.Entries);
                     break;
             }
         }

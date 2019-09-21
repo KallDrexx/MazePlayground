@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using MazePlayground.Common.Mazes;
 
-namespace MazePlayground.Common.WallSetupAlgorithms
+namespace MazePlayground.Common.WallSetup
 {
     public class AldousBroder
     {

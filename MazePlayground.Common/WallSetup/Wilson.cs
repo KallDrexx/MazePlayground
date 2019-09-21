@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MazePlayground.Common.Mazes;
 
-namespace MazePlayground.Common.WallSetupAlgorithms
+namespace MazePlayground.Common.WallSetup
 {
     public class Wilson
     {
