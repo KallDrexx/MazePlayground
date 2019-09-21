@@ -143,77 +143,38 @@ namespace MazePlayground.Common.Mazes
                     throw new NotSupportedException($"Link id {linkId} not supported");
             }
         }
-        
-        private static void OpenCellWall(Cell first, Cell second, Direction linkDirection)
-        {
-            var forwardLinkId = GetLinkIdForDirection(linkDirection);
-            var reverseLinkId = GetLinkIdForDirection(GetOppositeDirection(linkDirection));
-            
-            first.LinkToOtherCell(second, forwardLinkId);
-            second.LinkToOtherCell(first, reverseLinkId);
-        }
 
         private void SetupWalls(WallSetupAlgorithm setupAlgorithm)
         {
             switch (setupAlgorithm)
             {
                 case WallSetupAlgorithm.BinaryTree:
-                    SetupWallsBinaryTree();
+                    new BinaryTree().Run(this);
                     break;
                 
                 case WallSetupAlgorithm.Sidewinder:
-                    SetupWallsSidewinder();
+                    new Sidewinder().Run(this);
                     break;
                 
                 case WallSetupAlgorithm.AldousBroder:
-                    SetupWallsAldousBroder();
+                    new AldousBroder().Run(this);
                     break;
                 
                 case WallSetupAlgorithm.Wilson:
-                    SetupWallsWilson();
+                    new Wilson().Run(this);
                     break;
                 
                 case WallSetupAlgorithm.HuntAndKill:
-                    SetupWallsHuntAndKill();
+                    new HuntAndKill().Run(this);
                     break;
                 
                 case WallSetupAlgorithm.RecursiveBackTracker:
-                    SetupWallsRecursiveBackTracker();
+                    new RecursiveBackTracker().Run(this);
                     break;
                 
                 default:
                     throw new NotSupportedException($"Algorithm {setupAlgorithm} not supported");
             }
-        }
-
-        private void SetupWallsBinaryTree()
-        {
-            new BinaryTree().Run(this);
-        }
-
-        private void SetupWallsSidewinder()
-        {
-            new Sidewinder().Run(this);
-        }
-
-        private void SetupWallsAldousBroder()
-        {
-            new AldousBroder().Run(this);
-        }
-
-        private void SetupWallsWilson()
-        {
-            new Wilson().Run(this);
-        }
-
-        private void SetupWallsHuntAndKill()
-        {
-            new HuntAndKill().Run(this);
-        }
-
-        private void SetupWallsRecursiveBackTracker()
-        {
-            new RecursiveBackTracker().Run(this);
         }
         
         private (int row, int column) GetPositionFromIndex(int index)
@@ -274,29 +235,6 @@ namespace MazePlayground.Common.Mazes
             }
 
             return farthestCell;
-        }
-
-        private Direction GetDirectionOfCells(Cell source, Cell target)
-        {
-            if (source == target) throw new ArgumentException("Both cells are the same!");
-            
-            var sourcePosition = GetPositionFromIndex(_cellIndexMap[source]);
-            var targetPosition = GetPositionFromIndex(_cellIndexMap[target]);
-
-            var rowDifference = targetPosition.row - sourcePosition.row;
-            var colDifference = targetPosition.column - sourcePosition.column;
-
-            if (Math.Abs(rowDifference) > 1 ||
-                Math.Abs(colDifference) > 1 ||
-                (rowDifference != 0 && colDifference != 0))
-            {
-                throw new ArgumentException("Cells are not adjacent");
-            }
-
-            if (rowDifference == 1) return Direction.South;
-            if (rowDifference == -1) return Direction.North;
-            if (colDifference == 1) return Direction.East;
-            return Direction.West;
         }
     }
 }

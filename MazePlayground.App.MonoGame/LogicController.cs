@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using MazePlayground.App.MonoGame.Config;
 using MazePlayground.Common;
 using MazePlayground.Common.Mazes;
@@ -97,9 +98,15 @@ namespace MazePlayground.App.MonoGame
             {
                 case MazeType.Grid:
                     var config = _mazeConfigWindow.GridMazeConfig;
+                    
+                    var stopwatch = Stopwatch.StartNew();
                     var maze = new GridMaze(config.RowCount, config.ColumnCount, config.WallSetupAlgorithm);
-                    _mazeRenderer.LoadMaze(maze);
+                    stopwatch.Stop();
+                    
                     var stats = new MazeStats(maze, config.WallSetupAlgorithm);
+                    stats.AddCustomStat("Generation Time", $"{stopwatch.ElapsedMilliseconds}ms");
+                    
+                    _mazeRenderer.LoadMaze(maze, stats);
                     _mazeConfigWindow.SetMazeStats(stats.Entries);
                     break;
             }

@@ -1,6 +1,6 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
-using MazePlayground.App.MonoGame.Config;
 using MazePlayground.Common;
 using MazePlayground.Common.Mazes;
 using MazePlayground.Common.Rendering;
@@ -13,12 +13,15 @@ namespace MazePlayground.App.MonoGame
 {
     public class MazeRenderer
     {
+        private const string RenderTimeStatKey = "Render Time";
+        
         private readonly GraphicsDevice _graphicsDevice;
         private readonly SpriteBatch _spriteBatch;
         private Texture2D _currentMazeTexture;
         private Rectangle _renderTarget;
         private RenderOptions _renderOptions;
         private IMaze _currentMaze;
+        private MazeStats _currentStats;
         private DistanceInfo _mazeDistanceInfo;
         private ShortestPathInfo _mazeShortestPathInfo;
 
@@ -39,16 +42,15 @@ namespace MazePlayground.App.MonoGame
             }
         }
 
-        public IMaze LoadMaze(IMaze maze)
+        public void LoadMaze(IMaze maze, MazeStats mazeStats)
         {
             _currentMaze = maze;
+            _currentStats = mazeStats;
             _mazeDistanceInfo = CellDistanceSolver.GetDistancesFromCell(_currentMaze.StartingCell);
             _mazeShortestPathInfo = ShortestPathSolver.Solve(_currentMaze.FinishingCell, _mazeDistanceInfo);
             
             UpdateMazeRendering();
             ResetMazePositionAndScaling();
-
-            return _currentMaze;
         }
 
         public void MoveRenderedMaze(Point moveBy)
@@ -101,10 +103,14 @@ namespace MazePlayground.App.MonoGame
             
             if (_currentMaze is GridMaze gridMaze)
             {
+                var stopwatch = Stopwatch.StartNew();
                 using (var image = SkiaMazeRenderer.Render(gridMaze, _renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo))
                 {
                     RenderImageToTexture2D(image);
                 }
+                stopwatch.Stop();
+                
+                _currentStats.AddCustomStat(RenderTimeStatKey, $"{stopwatch.ElapsedMilliseconds}ms");
             }
             else
             {

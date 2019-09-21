@@ -110,9 +110,9 @@ namespace MazePlayground.App.MonoGame
                     ImGui.Columns(2, "stats-columns", false);
                     foreach (var stat in _mazeStats)
                     {
-                        ImGui.Text(stat.Key);
+                        ImGui.TextWrapped(stat.Key + ":");
                         ImGui.NextColumn();
-                        ImGui.Text(stat.Value);
+                        ImGui.TextWrapped(stat.Value);
                         ImGui.NextColumn();
                     }
                 }

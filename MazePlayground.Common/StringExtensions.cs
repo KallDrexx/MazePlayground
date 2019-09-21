@@ -14,7 +14,7 @@ namespace MazePlayground.Common
             var builder = new StringBuilder(str.Substring(0, 1));
             for (var x = 1; x < str.Length; x++)
             {
-                if (char.IsUpper(str[x - 1]) && char.IsUpper(str[x]))
+                if (!char.IsWhiteSpace(str[x - 1]) && !char.IsUpper(str[x - 1]) && char.IsUpper(str[x]))
                 {
                     builder.Append(" ");
                 }

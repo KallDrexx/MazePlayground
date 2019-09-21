@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using MazePlayground.Common.Mazes;
 using MazePlayground.Common.WallSetup;
 
@@ -56,7 +57,15 @@ namespace MazePlayground.Common
 
         private void AddStat(string name, string value)
         {
-            _entries.Add(new KeyValuePair<string, string>(name, value));
+            var entryIndex = _entries.FindIndex(x => x.Key == name);
+            if (entryIndex >= 0)
+            {
+                _entries[entryIndex] = new KeyValuePair<string, string>(name, value);
+            }
+            else
+            {
+                _entries.Add(new KeyValuePair<string, string>(name, value));
+            }
         }
     }
 }
