@@ -222,118 +222,12 @@ namespace MazePlayground.Common.Mazes
 
         private void SetupWallsAldousBroder()
         {
-            // Start with a cell and carve a path through all other cells until every cell has been visited.  Only
-            // carve out walls of a cell the first time it is visited.
-            
-            var visitedCells = new HashSet<Cell>();
-            var currentCell = Cells[0];
-            visitedCells.Add(currentCell);
-            while (visitedCells.Count < Cells.Length)
-            {
-                var cellIndex = _cellIndexMap[currentCell];
-                var currentPosition = GetPositionFromIndex(cellIndex);
-
-                var directions = new List<Direction>();
-                if (currentPosition.row != 0) directions.Add(Direction.North);
-                if (currentPosition.column != 0) directions.Add(Direction.West);
-                if (currentPosition.row < RowCount - 1) directions.Add(Direction.South);
-                if (currentPosition.column < ColumnCount - 1) directions.Add(Direction.East);
-
-                var nextDirection = directions[_random.Next(0, directions.Count)];
-                var nextCell = GetCellInDirection(currentPosition.row, currentPosition.column, nextDirection);
-                if (!visitedCells.Contains(nextCell))
-                {
-                    OpenCellWall(currentCell, nextCell, nextDirection);
-                    visitedCells.Add(nextCell);
-                }
-
-                currentCell = nextCell;
-            }
+            new AldousBroder().Run(this);
         }
 
         private void SetupWallsWilson()
         {
-            // Start with one cell marked as visited.  Pick a random non-visited cell and create a path of cells until
-            // we get to a visited cell.  Carve out a path through the path to the visited cell, then repeat until all
-            // cells are visited.  If a path loops around reset the path at the beginning of the loop.
-            
-            void OpenCellInPath(Cell firstCell, Cell secondCell, HashSet<Cell> hashSet, HashSet<Cell> cells, List<int> ints)
-            {
-                var direction = GetDirectionOfCells(firstCell, secondCell);
-                OpenCellWall(firstCell, secondCell, direction);
-
-                hashSet.Add(firstCell);
-                cells.Remove(firstCell);
-                ints.Remove(_cellIndexMap[firstCell]);
-            }
-
-            var visitedCells = new HashSet<Cell>();
-            var unvisitedCells = new HashSet<Cell>(Cells);
-            var unvisitedCellIndexes = Enumerable.Range(1, Cells.Length - 1).ToList();
-            var currentPath = new List<Cell>();
-
-            visitedCells.Add(Cells[0]);
-            unvisitedCells.Remove(Cells[0]);
-
-            var currentCellIndex = unvisitedCellIndexes[_random.Next(0, unvisitedCellIndexes.Count)];
-            var currentCell = Cells[currentCellIndex];
-            currentPath.Add(currentCell);
-            while (true)
-            {
-                var cellIndex = _cellIndexMap[currentCell];
-                var currentPosition = GetPositionFromIndex(cellIndex);
-                
-                var directions = new List<Direction>();
-                if (currentPosition.row != 0) directions.Add(Direction.North);
-                if (currentPosition.column != 0) directions.Add(Direction.West);
-                if (currentPosition.row < RowCount - 1) directions.Add(Direction.South);
-                if (currentPosition.column < ColumnCount - 1) directions.Add(Direction.East);
-                
-                var nextDirection = directions[_random.Next(0, directions.Count)];
-                var nextCell = GetCellInDirection(currentPosition.row, currentPosition.column, nextDirection);
-
-                if (visitedCells.Contains(nextCell))
-                {
-                    // Walk the path
-                    for (var x = 1; x < currentPath.Count; x++)
-                    {
-                        var firstCell = currentPath[x - 1];
-                        var secondCell = currentPath[x];
-                        OpenCellInPath(firstCell, secondCell, visitedCells, unvisitedCells, unvisitedCellIndexes);
-                    }
-                    
-                    OpenCellInPath(currentCell, nextCell, visitedCells, unvisitedCells, unvisitedCellIndexes);
-
-                    // Path completed, pick the next cell to start a new path
-                    if (unvisitedCellIndexes.Count == 0)
-                    {
-                        break;
-                    }
-                    
-                    currentCellIndex = unvisitedCellIndexes[_random.Next(0, unvisitedCellIndexes.Count)];
-                    currentCell = Cells[currentCellIndex];
-                    currentPath.Clear();
-                }
-                else
-                {
-                    var indexInPath = currentPath.IndexOf(nextCell);
-                    if (indexInPath >= 0)
-                    {
-                        // We looped around.  Remove the loop from the path
-                        for (var x = currentPath.Count - 1; x > indexInPath; x--)
-                        {
-                            currentPath.RemoveAt(x);
-                        }
-                    }
-                    else
-                    {
-                        // Newly seen cell
-                        currentPath.Add(nextCell);
-                    }
-
-                    currentCell = nextCell;
-                }
-            }
+            new Wilson().Run(this);
         }
 
         private void SetupWallsHuntAndKill()
