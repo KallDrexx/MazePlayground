@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using MazePlayground.App.MonoGame.Ui;
 using MazePlayground.Common;
 using MazePlayground.Common.Mazes;
 using MazePlayground.Common.Rendering;
@@ -106,7 +107,7 @@ namespace MazePlayground.App.MonoGame
                 var stopwatch = Stopwatch.StartNew();
                 using (var image = SkiaMazeRenderer.Render(rectangularMaze, _renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo))
                 {
-                    RenderImageToTexture2D(image);
+                    _currentMazeTexture = MonoGameUtils.RenderImageToTexture2D(image, _graphicsDevice);
                 }
                 stopwatch.Stop();
                 
@@ -116,17 +117,6 @@ namespace MazePlayground.App.MonoGame
             {
                 throw new NotSupportedException($"Maze type {_currentMaze.GetType()} cannot be rendered");
             }
-        }
-
-        private void RenderImageToTexture2D(SKImage image)
-        {
-            var pixelMap = image.PeekPixels();
-            var pointer = pixelMap.GetPixels();
-            var pixels = new byte[image.Height * pixelMap.RowBytes];
-
-            Marshal.Copy(pointer, pixels, 0, pixels.Length);
-            _currentMazeTexture = new Texture2D(_graphicsDevice, image.Width, image.Height);
-            _currentMazeTexture.SetData(pixels);
         }
     }
 }

@@ -1,3 +1,4 @@
+using MazePlayground.App.MonoGame.Ui;
 using Microsoft.Xna.Framework;
 using Num = System.Numerics;
 
@@ -7,6 +8,7 @@ namespace MazePlayground.App.MonoGame
     {
         private readonly GraphicsDeviceManager _graphics;
         private MazeConfigWindow _mazeConfigWindow;
+        private MaskCreationWindow _maskCreationWindow;
         private MazeRenderer _mazeRenderer;
         private LogicController _logicController;
         private ImGuiRenderer _imGuiRenderer;
@@ -28,9 +30,10 @@ namespace MazePlayground.App.MonoGame
             _imGuiRenderer = new ImGuiRenderer(this);
             _imGuiRenderer.RebuildFontAtlas();
             
-            _mazeConfigWindow = new MazeConfigWindow(_graphics.GraphicsDevice);
+            _mazeConfigWindow = new MazeConfigWindow(_graphics.GraphicsDevice, _imGuiRenderer);
+            _maskCreationWindow = new MaskCreationWindow(_graphics.GraphicsDevice);
             _mazeRenderer = new MazeRenderer(_graphics.GraphicsDevice);
-            _logicController = new LogicController(_mazeConfigWindow, _mazeRenderer);
+            _logicController = new LogicController(_mazeConfigWindow, _mazeRenderer, _maskCreationWindow, _graphics.GraphicsDevice);
 
             base.Initialize();
         }
@@ -50,6 +53,7 @@ namespace MazePlayground.App.MonoGame
             
             _imGuiRenderer.BeforeLayout(gameTime);
             _mazeConfigWindow.Render();
+            _maskCreationWindow.Render();
             _imGuiRenderer.AfterLayout();
 
             base.Draw(gameTime);

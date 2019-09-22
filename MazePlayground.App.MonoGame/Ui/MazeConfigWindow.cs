@@ -4,18 +4,18 @@ using System.Linq;
 using System.Numerics;
 using ImGuiNET;
 using MazePlayground.App.MonoGame.Config;
-using MazePlayground.Common.Mazes;
 using MazePlayground.Common.Rendering;
 using MazePlayground.Common.WallSetup;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace MazePlayground.App.MonoGame
+namespace MazePlayground.App.MonoGame.Ui
 {
     public class MazeConfigWindow
     {
         public const int WindowWidth = 250;
 
         private readonly GraphicsDevice _graphicsDevice;
+        private readonly ImGuiRenderer _imGuiRenderer;
         private readonly string[] _mazeGridTypes;
         private readonly string[] _gridAlgorithmNames;
         private int _selectedMazeTypeIndex;
@@ -23,6 +23,9 @@ namespace MazePlayground.App.MonoGame
         private int _rowCount = 29;
         private int _columnCount = 29;
         private int _selectedWallSetupAlgorithmIndex;
+
+        private Texture2D _maskTexture;
+        private IntPtr _maskTexturePointer;
 
         private bool _showDemoWindow;
         private bool _showMetricsWindow;
@@ -37,15 +40,17 @@ namespace MazePlayground.App.MonoGame
         public bool RenderingOptionsChanged { get; private set; }
         public bool WindowHasFocus { get; private set; }
         public bool ResetMazePositionPressed { get; private set; }
+        public bool ShowMaskEditorButtonPressed { get; private set; }
         
         public MazeType MazeType => GetMazeType();
         public RectangularMazeConfig RectangularMazeConfig => GetRectangularMazeConfig();
         public RenderOptions RenderingOptions => GetRenderOptions();
 
-        public MazeConfigWindow(GraphicsDevice graphicsDevice)
+        public MazeConfigWindow(GraphicsDevice graphicsDevice, ImGuiRenderer imGuiRenderer)
         {
             _graphicsDevice = graphicsDevice;
-            
+            _imGuiRenderer = imGuiRenderer;
+
             _mazeGridTypes = Enum.GetValues(typeof(MazeType))
                 .Cast<MazeType>()
                 .Select(x => x.ToString())
@@ -70,6 +75,17 @@ namespace MazePlayground.App.MonoGame
         public void SetMazeStats(IReadOnlyList<KeyValuePair<string, string>> stats)
         {
             _mazeStats = stats;
+        }
+
+        public void SetMaskTexture(Texture2D maskTexture)
+        {
+            if (_maskTexture != null)
+            {
+                _imGuiRenderer.UnbindTexture(_maskTexturePointer);
+            }
+            
+            _maskTexture = maskTexture;
+            _maskTexturePointer = _imGuiRenderer.BindTexture(_maskTexture);
         }
         
         public void Render()
@@ -132,6 +148,16 @@ namespace MazePlayground.App.MonoGame
                 ImGui.InputInt("Rows", ref _rowCount);
                 ImGui.InputInt("Columns", ref _columnCount);
                 ImGui.Combo("Algorithm", ref _selectedWallSetupAlgorithmIndex, _gridAlgorithmNames, _gridAlgorithmNames.Length);
+            }
+            else if (_selectedMazeTypeIndex == 1)
+            {
+                ShowMaskEditorButtonPressed = ImGui.Button("Open Mask Editor");
+
+                if (_maskTexture != null)
+                {
+                    var imageSize = new Vector2(_maskTexture.Width, _maskTexture.Height);
+                    ImGui.Image(_maskTexturePointer, imageSize);
+                }
             }
             
             ImGui.Spacing();
