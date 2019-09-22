@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using MazePlayground.Common.Solvers;
 using MazePlayground.Common.WallSetup;
@@ -59,13 +58,13 @@ namespace MazePlayground.Common.Mazes
 
         public IReadOnlyList<CellWall> GetWallsForCell(Cell cell)
         {
-            if (cell == null) throw new ArgumentNullException(nameof(cell));
+                if (cell == null) throw new ArgumentNullException(nameof(cell));
 
-            var (row, column) = GetPositionOfCell(cell);
-            return new[] {Direction.North, Direction.East, Direction.South, Direction.West}
-                .Select(x => new CellWall(GetLinkIdForDirection(x), GetCellInDirection(row, column, x)))
-                .Where(x => x.CellOnOtherSide != null)
-                .ToArray();
+                var (row, column) = GetPositionOfCell(cell);
+                return new[] {Direction.North, Direction.East, Direction.South, Direction.West}
+                    .Select(x => new CellWall(GetLinkIdForDirection(x), GetCellInDirection(row, column, x)))
+                    .Where(x => x.CellOnOtherSide != null)
+                    .ToArray();
         }
 
         public byte GetOppositeLinkId(byte linkId)

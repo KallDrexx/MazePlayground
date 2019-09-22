@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using MazePlayground.App.MonoGame.Config;
 using MazePlayground.App.MonoGame.Ui;
 using MazePlayground.Common;
 using MazePlayground.Common.Mazes;
+using MazePlayground.Common.WallSetup;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -120,6 +122,7 @@ namespace MazePlayground.App.MonoGame
             switch (_mazeConfigWindow.MazeType)
             {
                 case MazeType.Rectangular:
+                {
                     var config = _mazeConfigWindow.RectangularMazeConfig;
                     
                     var stopwatch = Stopwatch.StartNew();
@@ -132,21 +135,29 @@ namespace MazePlayground.App.MonoGame
                     _mazeRenderer.LoadMaze(maze, stats);
                     _mazeConfigWindow.SetMazeStats(stats.Entries);
                     break;
+                }
+                
+                case MazeType.Masked:
+                {
+                    var maze = new MaskedMaze(_maskCreationWindow.RowCount, _maskCreationWindow.ColumnCount, _maskCreationWindow.MaskData, WallSetupAlgorithm.RecursiveBackTracker);
+                    _mazeRenderer.LoadMaze(maze, null);
+                    break;
+                }
             }
         }
 
         private void RenderMask()
         {
             const int scaleFactor = 3;
-            var maskValues = _maskCreationWindow.MaskData;
+            var mask = _maskCreationWindow.MaskData;
             var imageInfo = new SKImageInfo(_maskCreationWindow.ColumnCount * scaleFactor, _maskCreationWindow.RowCount * scaleFactor, SKColorType.Rgba8888, SKAlphaType.Premul);
             using (var surface = SKSurface.Create(imageInfo))
             {
                 surface.Canvas.Clear(SKColors.Black);
                 var white = new SKPaint {Color = SKColors.White};
-                for (var x = 0; x < maskValues.Count; x++)
+                for (var x = 0; x < mask.Count; x++)
                 {
-                    if (!maskValues[x])
+                    if (!mask[x])
                     {
                         continue;
                     }

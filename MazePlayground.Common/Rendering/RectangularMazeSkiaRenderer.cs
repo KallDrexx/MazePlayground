@@ -5,40 +5,43 @@ using SkiaSharp;
 
 namespace MazePlayground.Common.Rendering
 {
-    public static class SkiaMazeRenderer
+    public static class RectangularMazeSkiaRenderer
     {
-        public static SKImage Render(RectangularMaze maze, RenderOptions renderOptions, DistanceInfo distanceInfo, ShortestPathInfo shortestPathInfo)
+        private const int Margin = 10;
+        private const int CellLineWidth = 1;
+        private const int CellSize = 25;
+        private const int LabelMarginX = (int) (CellSize * 0.25);
+        private const int LabelMarginY = (int) (CellSize * 0.75);
+        
+        public static SKImage RenderWithSkia(this RectangularMaze maze, 
+            RenderOptions renderOptions, 
+            DistanceInfo distanceInfo,
+            ShortestPathInfo shortestPathInfo)
         {
-            const int margin = 10;
-            const int cellLineWidth = 1;
-            const int cellSize = 25;
-            const int labelMarginX = (int) (cellSize * 0.25);
-            const int labelMarginY = (int) (cellSize * 0.75);
-            
             if (maze == null) throw new ArgumentNullException(nameof(maze));
 
             renderOptions = renderOptions ?? new RenderOptions();
 
-            var imageWidth = (cellSize * maze.ColumnCount) + (margin * 2);
-            var imageHeight = (cellSize * maze.RowCount) + (margin * 2);
+            var imageWidth = (CellSize * maze.ColumnCount) + (Margin * 2);
+            var imageHeight = (CellSize * maze.RowCount) + (Margin * 2);
             
             var imageInfo = new SKImageInfo(imageWidth, imageHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
             using (var surface = SKSurface.Create(imageInfo))
             {
                 surface.Canvas.Clear(SKColors.Black);
 
-                var whitePaint = new SKPaint {Color = SKColors.White, StrokeWidth = cellLineWidth};
-                var startPaint = new SKPaint {Color = SKColors.Green, StrokeWidth = cellLineWidth};
-                var finishPaint = new SKPaint {Color = SKColors.Red, StrokeWidth = cellLineWidth};
-                var pathPaint = new SKPaint {Color = SKColors.Yellow, StrokeWidth = cellLineWidth};
+                var whitePaint = new SKPaint {Color = SKColors.White, StrokeWidth = CellLineWidth};
+                var startPaint = new SKPaint {Color = SKColors.Green, StrokeWidth = CellLineWidth};
+                var finishPaint = new SKPaint {Color = SKColors.Red, StrokeWidth = CellLineWidth};
+                var pathPaint = new SKPaint {Color = SKColors.Yellow, StrokeWidth = CellLineWidth};
 
                 foreach (var cell in maze.Cells)
                 {
                     var (row, column) =  maze.GetPositionOfCell(cell);
-                    var leftX = (column * cellSize) + margin;
-                    var rightX = leftX + cellSize;
-                    var topY = (row * cellSize) + margin;
-                    var bottomY = topY + cellSize;
+                    var leftX = (column * CellSize) + Margin;
+                    var rightX = leftX + CellSize;
+                    var topY = (row * CellSize) + Margin;
+                    var bottomY = topY + CellSize;
 
                     var isNorthFacingExit = (maze.FinishingCell == cell || maze.StartingCell == cell) && row == 0 && column > 1;
                     var isSouthFacingExit = (maze.FinishingCell == cell || maze.StartingCell == cell) && row == maze.RowCount - 1 && column > 1;
@@ -87,20 +90,20 @@ namespace MazePlayground.Common.Rendering
                             : pathPaint;
 
                         var distance = distanceInfo.DistanceFromStartMap[cell];
-                        surface.Canvas.DrawText(distance.ToString(), leftX + labelMarginX, topY + labelMarginY, paint);
+                        surface.Canvas.DrawText(distance.ToString(), leftX + LabelMarginX, topY + LabelMarginY, paint);
                     }
                     else if (renderOptions.ShowAllDistances && distanceInfo.DistanceFromStartMap.ContainsKey(cell))
                     {
                         var distance = distanceInfo.DistanceFromStartMap[cell];
-                        surface.Canvas.DrawText(distance.ToString(), leftX + labelMarginX, topY + labelMarginY, whitePaint);
+                        surface.Canvas.DrawText(distance.ToString(), leftX + LabelMarginX, topY + LabelMarginY, whitePaint);
                     }
                     else if (cell == maze.StartingCell)
                     {
-                        surface.Canvas.DrawText("S", leftX + labelMarginX, topY + labelMarginY, startPaint);
+                        surface.Canvas.DrawText("S", leftX + LabelMarginX, topY + LabelMarginY, startPaint);
                     }
                     else if (cell == maze.FinishingCell)
                     {
-                        surface.Canvas.DrawText("E", leftX + labelMarginX, topY + labelMarginY, finishPaint);
+                        surface.Canvas.DrawText("E", leftX + LabelMarginX, topY + LabelMarginY, finishPaint);
                     }
                 }
 

@@ -23,7 +23,7 @@ namespace MazePlayground.App.MonoGame.Ui
         private int _rowCount = 29;
         private int _columnCount = 29;
         private int _selectedWallSetupAlgorithmIndex;
-
+        
         private Texture2D _maskTexture;
         private IntPtr _maskTexturePointer;
 

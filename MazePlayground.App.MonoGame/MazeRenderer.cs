@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using MazePlayground.App.MonoGame.Ui;
 using MazePlayground.Common;
 using MazePlayground.Common.Mazes;
@@ -8,7 +7,6 @@ using MazePlayground.Common.Rendering;
 using MazePlayground.Common.Solvers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SkiaSharp;
 
 namespace MazePlayground.App.MonoGame
 {
@@ -105,13 +103,20 @@ namespace MazePlayground.App.MonoGame
             if (_currentMaze is RectangularMaze rectangularMaze)
             {
                 var stopwatch = Stopwatch.StartNew();
-                using (var image = SkiaMazeRenderer.Render(rectangularMaze, _renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo))
+                using (var image = rectangularMaze.RenderWithSkia(_renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo))
                 {
                     _currentMazeTexture = MonoGameUtils.RenderImageToTexture2D(image, _graphicsDevice);
                 }
                 stopwatch.Stop();
                 
                 _currentStats.AddCustomStat(RenderTimeStatKey, $"{stopwatch.ElapsedMilliseconds}ms");
+            }
+            else if (_currentMaze is MaskedMaze maskedMaze)
+            {
+                using (var image = maskedMaze.RenderWithSkia(_renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo))
+                {
+                    _currentMazeTexture = MonoGameUtils.RenderImageToTexture2D(image, _graphicsDevice);
+                }
             }
             else
             {
