@@ -71,7 +71,7 @@ namespace MazePlayground.App.MonoGame
         private void HandleInput()
         {
             var mouseState = Mouse.GetState();
-            var anyWindowHasFocus = _maskCreationWindow.WindowHasFocus || _maskCreationWindow.WindowHasFocus;
+            var anyWindowHasFocus = _maskCreationWindow.WindowHasFocus || _mazeConfigWindow.WindowHasFocus;
             
             if (mouseState.LeftButton == ButtonState.Pressed && !anyWindowHasFocus)
             {
