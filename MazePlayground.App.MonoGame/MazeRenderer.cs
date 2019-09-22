@@ -7,6 +7,7 @@ using MazePlayground.Common.Rendering;
 using MazePlayground.Common.Solvers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SkiaSharp;
 
 namespace MazePlayground.App.MonoGame
 {
@@ -100,27 +101,28 @@ namespace MazePlayground.App.MonoGame
                 return;
             }
             
-            if (_currentMaze is RectangularMaze rectangularMaze)
+            var stopwatch = Stopwatch.StartNew();
+            using (var image = GetImageForCurrentMaze())
             {
-                var stopwatch = Stopwatch.StartNew();
-                using (var image = rectangularMaze.RenderWithSkia(_renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo))
-                {
-                    _currentMazeTexture = MonoGameUtils.RenderImageToTexture2D(image, _graphicsDevice);
-                }
-                stopwatch.Stop();
+                _currentMazeTexture = MonoGameUtils.RenderImageToTexture2D(image, _graphicsDevice);
+            }
+            
+            stopwatch.Stop();
+            _currentStats.AddCustomStat(RenderTimeStatKey, $"{stopwatch.ElapsedMilliseconds}ms");
+        }
+
+        private SKImage GetImageForCurrentMaze()
+        {
+            switch (_currentMaze)
+            {
+                case RectangularMaze rectangularMaze:
+                    return rectangularMaze.RenderWithSkia(_renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo);
                 
-                _currentStats.AddCustomStat(RenderTimeStatKey, $"{stopwatch.ElapsedMilliseconds}ms");
-            }
-            else if (_currentMaze is MaskedMaze maskedMaze)
-            {
-                using (var image = maskedMaze.RenderWithSkia(_renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo))
-                {
-                    _currentMazeTexture = MonoGameUtils.RenderImageToTexture2D(image, _graphicsDevice);
-                }
-            }
-            else
-            {
-                throw new NotSupportedException($"Maze type {_currentMaze.GetType()} cannot be rendered");
+                case MaskedMaze maskedMaze:
+                    return maskedMaze.RenderWithSkia(_renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo);
+                
+                default:
+                    throw new NotSupportedException($"Maze type {_currentMaze.GetType()} cannot be rendered");
             }
         }
     }

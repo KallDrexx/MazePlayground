@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using MazePlayground.App.MonoGame.Config;
@@ -18,6 +19,7 @@ namespace MazePlayground.App.MonoGame
         private readonly MaskCreationWindow _maskCreationWindow;
         private readonly MazeRenderer _mazeRenderer;
         private readonly GraphicsDevice _graphicsDevice;
+        private readonly MessageDisplayWindow _messageDisplayWindow;
         private Point? _mousePositionLastFrame;
         private int _scrollWheelLastFrame;
         private bool _f1WasDown, _f2WasDown;
@@ -25,12 +27,14 @@ namespace MazePlayground.App.MonoGame
         public LogicController(MazeConfigWindow mazeConfigWindow, 
             MazeRenderer mazeRenderer, 
             MaskCreationWindow maskCreationWindow, 
-            GraphicsDevice graphicsDevice)
+            GraphicsDevice graphicsDevice, 
+            MessageDisplayWindow messageDisplayWindow)
         {
             _mazeConfigWindow = mazeConfigWindow;
             _mazeRenderer = mazeRenderer;
             _maskCreationWindow = maskCreationWindow;
             _graphicsDevice = graphicsDevice;
+            _messageDisplayWindow = messageDisplayWindow;
         }
 
         public void ExecuteLogic()
@@ -43,12 +47,26 @@ namespace MazePlayground.App.MonoGame
         {
             if (_mazeConfigWindow.GenerateButtonPressed)
             {
-                GenerateMaze();
+                try
+                {
+                    GenerateMaze();
+                }
+                catch (Exception ex)
+                {
+                    _messageDisplayWindow.ShowMessage("Error Generating Maze", ex.ToString());
+                }
             }
 
             if (_mazeConfigWindow.RenderingOptionsChanged)
             {
-                _mazeRenderer.SetRenderOptions(_mazeConfigWindow.RenderingOptions);
+                try
+                {
+                    _mazeRenderer.SetRenderOptions(_mazeConfigWindow.RenderingOptions);
+                }
+                catch (Exception ex)
+                {
+                    _messageDisplayWindow.ShowMessage("Error Updating Maze Rendering", ex.ToString());
+                }
             }
 
             if (_mazeConfigWindow.ResetMazePositionPressed)
@@ -119,60 +137,45 @@ namespace MazePlayground.App.MonoGame
 
         private void GenerateMaze()
         {
+            var stopwatch = Stopwatch.StartNew();
+            var maze = CreateMaze();
+            stopwatch.Stop();
+            
+            var stats = new MazeStats(maze, _mazeConfigWindow.SelectedWallSetupAlgorithm);
+            stats.AddCustomStat("Generation Time", $"{stopwatch.ElapsedMilliseconds}ms");
+            
+            _mazeRenderer.LoadMaze(maze, stats);
+            _mazeConfigWindow.SetMazeStats(stats.Entries);
+        }
+
+        private IMaze CreateMaze()
+        {
             switch (_mazeConfigWindow.MazeType)
             {
                 case MazeType.Rectangular:
-                {
-                    var config = _mazeConfigWindow.RectangularMazeConfig;
-                    
-                    var stopwatch = Stopwatch.StartNew();
-                    var maze = new RectangularMaze(config.RowCount, config.ColumnCount, config.WallSetupAlgorithm);
-                    stopwatch.Stop();
-                    
-                    var stats = new MazeStats(maze, config.WallSetupAlgorithm);
-                    stats.AddCustomStat("Generation Time", $"{stopwatch.ElapsedMilliseconds}ms");
-                    
-                    _mazeRenderer.LoadMaze(maze, stats);
-                    _mazeConfigWindow.SetMazeStats(stats.Entries);
-                    break;
-                }
+                    var rectangularMazeConfig = _mazeConfigWindow.RectangularMazeConfig;
+                    return new RectangularMaze(rectangularMazeConfig.RowCount, 
+                        rectangularMazeConfig.ColumnCount,
+                        _mazeConfigWindow.SelectedWallSetupAlgorithm);
                 
                 case MazeType.Masked:
-                {
-                    var maze = new MaskedMaze(_maskCreationWindow.RowCount, _maskCreationWindow.ColumnCount, _maskCreationWindow.MaskData, WallSetupAlgorithm.RecursiveBackTracker);
-                    _mazeRenderer.LoadMaze(maze, null);
-                    break;
-                }
+                    return new MaskedMaze(_maskCreationWindow.RowCount, 
+                        _maskCreationWindow.ColumnCount, 
+                        _maskCreationWindow.MaskData, 
+                        _mazeConfigWindow.SelectedWallSetupAlgorithm);
+                
+                default:
+                    throw new NotSupportedException($"No known way to create maze of type {_mazeConfigWindow.MazeType}");
             }
         }
 
         private void RenderMask()
         {
-            const int scaleFactor = 3;
             var mask = _maskCreationWindow.MaskData;
-            var imageInfo = new SKImageInfo(_maskCreationWindow.ColumnCount * scaleFactor, _maskCreationWindow.RowCount * scaleFactor, SKColorType.Rgba8888, SKAlphaType.Premul);
-            using (var surface = SKSurface.Create(imageInfo))
-            {
-                surface.Canvas.Clear(SKColors.Black);
-                var white = new SKPaint {Color = SKColors.White};
-                for (var x = 0; x < mask.Count; x++)
-                {
-                    if (!mask[x])
-                    {
-                        continue;
-                    }
-                    
-                    var row = x / _maskCreationWindow.ColumnCount;
-                    var column = x % _maskCreationWindow.ColumnCount;
-                    surface.Canvas.DrawRect(column * scaleFactor, row * scaleFactor, scaleFactor, scaleFactor, white);
-                }
-
-                using (var image = surface.Snapshot())
-                {
-                    var texture2d = MonoGameUtils.RenderImageToTexture2D(image, _graphicsDevice);
-                    _mazeConfigWindow.SetMaskTexture(texture2d);
-                }
-            }
+            var rows = _maskCreationWindow.RowCount;
+            var columns = _maskCreationWindow.ColumnCount;
+            
+            _mazeConfigWindow.SetMask(mask, rows, columns);
         }
     }
 }

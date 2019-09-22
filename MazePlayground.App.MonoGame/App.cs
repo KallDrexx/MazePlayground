@@ -12,6 +12,7 @@ namespace MazePlayground.App.MonoGame
         private MazeRenderer _mazeRenderer;
         private LogicController _logicController;
         private ImGuiRenderer _imGuiRenderer;
+        private MessageDisplayWindow _messageDisplayWindow;
 
         public App()
         {
@@ -33,7 +34,9 @@ namespace MazePlayground.App.MonoGame
             _mazeConfigWindow = new MazeConfigWindow(_graphics.GraphicsDevice, _imGuiRenderer);
             _maskCreationWindow = new MaskCreationWindow(_graphics.GraphicsDevice);
             _mazeRenderer = new MazeRenderer(_graphics.GraphicsDevice);
-            _logicController = new LogicController(_mazeConfigWindow, _mazeRenderer, _maskCreationWindow, _graphics.GraphicsDevice);
+            _messageDisplayWindow = new MessageDisplayWindow();
+            _logicController = new LogicController(_mazeConfigWindow, _mazeRenderer, _maskCreationWindow,
+	            _graphics.GraphicsDevice, _messageDisplayWindow);
 
             base.Initialize();
         }
@@ -54,6 +57,7 @@ namespace MazePlayground.App.MonoGame
             _imGuiRenderer.BeforeLayout(gameTime);
             _mazeConfigWindow.Render();
             _maskCreationWindow.Render();
+            _messageDisplayWindow.Render();
             _imGuiRenderer.AfterLayout();
 
             base.Draw(gameTime);

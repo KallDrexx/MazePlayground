@@ -1,10 +1,9 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using ImGuiNET;
 using MazePlayground.App.MonoGame.Config;
 using MazePlayground.Common.Rendering;
+using MazePlayground.Common.WallSetup;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace MazePlayground.App.MonoGame.Ui
@@ -15,38 +14,29 @@ namespace MazePlayground.App.MonoGame.Ui
 
         private readonly GraphicsDevice _graphicsDevice;
         private readonly MazeStatsDisplay _mazeStatsDisplay;
-        private readonly RectangularMazeGenerationDisplay _rectangularMazeGenerationDisplay;
-        private readonly MaskedMazeGenerationDisplay _maskedMazeGenerationDisplay;
         private readonly RenderOptionsDisplay _renderOptionsDisplay;
-        
-        private readonly string[] _mazeGridTypes;
-        private int _selectedMazeTypeIndex;
+        private readonly MazeGenerationConfigDisplay _mazeGenerationConfigDisplay;
         
         private bool _showDemoWindow;
         private bool _showMetricsWindow;
 
-        public bool GenerateButtonPressed { get; private set; }
+        public bool GenerateButtonPressed => _mazeGenerationConfigDisplay.GenerateButtonPressed;
         public bool RenderingOptionsChanged => _renderOptionsDisplay.RenderingOptionsChanged;
         public bool WindowHasFocus { get; private set; }
         public bool ResetMazePositionPressed => _renderOptionsDisplay.ResetMazePositionPressed;
-        public bool ShowMaskEditorButtonPressed => _maskedMazeGenerationDisplay.ShowMaskEditorButtonPressed;
-        
-        public MazeType MazeType => GetMazeType();
-        public RectangularMazeConfig RectangularMazeConfig => GetRectangularMazeConfig();
+        public bool ShowMaskEditorButtonPressed => _mazeGenerationConfigDisplay.ShowMaskEditorButtonPressed;
+
+        public MazeType MazeType => _mazeGenerationConfigDisplay.MazeType;
+        public RectangularMazeConfig RectangularMazeConfig => _mazeGenerationConfigDisplay.RectangularMazeConfig;
+        public WallSetupAlgorithm SelectedWallSetupAlgorithm => _mazeGenerationConfigDisplay.SelectedWallSetupAlgorithm;
         public RenderOptions RenderingOptions => GetRenderOptions();
 
         public MazeConfigWindow(GraphicsDevice graphicsDevice, ImGuiRenderer imGuiRenderer)
         {
             _graphicsDevice = graphicsDevice;
             _mazeStatsDisplay = new MazeStatsDisplay();
-            _rectangularMazeGenerationDisplay = new RectangularMazeGenerationDisplay();
-            _maskedMazeGenerationDisplay = new MaskedMazeGenerationDisplay(imGuiRenderer);
+            _mazeGenerationConfigDisplay = new MazeGenerationConfigDisplay(graphicsDevice, imGuiRenderer);
             _renderOptionsDisplay = new RenderOptionsDisplay();
-
-            _mazeGridTypes = Enum.GetValues(typeof(MazeType))
-                .Cast<MazeType>()
-                .Select(x => x.ToString())
-                .ToArray();
         }
 
         public void ToggleDemoWindow()
@@ -64,9 +54,9 @@ namespace MazePlayground.App.MonoGame.Ui
             _mazeStatsDisplay.SetMazeStats(stats);
         }
 
-        public void SetMaskTexture(Texture2D maskTexture)
+        public void SetMask(IReadOnlyList<bool> mask, int rowCount, int columnCount)
         {
-            _maskedMazeGenerationDisplay.SetMaskTexture(maskTexture);
+            _mazeGenerationConfigDisplay.SetMask(mask, rowCount, columnCount);
         }
         
         public void Render()
@@ -83,7 +73,7 @@ namespace MazePlayground.App.MonoGame.Ui
 
             if (ImGui.CollapsingHeader("Generation", ImGuiTreeNodeFlags.DefaultOpen))
             {
-                RenderGenerationTab();
+                _mazeGenerationConfigDisplay.Render();
             }
             
             ImGui.Spacing();
@@ -105,47 +95,6 @@ namespace MazePlayground.App.MonoGame.Ui
             
             if (_showDemoWindow) ImGui.ShowDemoWindow();
             if (_showMetricsWindow) ImGui.ShowMetricsWindow();
-        }
-
-        private void RenderGenerationTab()
-        {
-            ImGui.Combo("Maze Type", ref _selectedMazeTypeIndex, _mazeGridTypes, _mazeGridTypes.Length);
-            
-            if (_selectedMazeTypeIndex == 0)
-            {
-                _rectangularMazeGenerationDisplay.Render();
-            }
-            else if (_selectedMazeTypeIndex == 1)
-            {
-                _maskedMazeGenerationDisplay.Render();
-            }
-            
-            ImGui.Spacing();
-            ImGui.Spacing();
-            ImGui.Spacing();
-            
-            GenerateButtonPressed = ImGui.Button("Generate Maze");
-        }
-
-        private MazeType GetMazeType()
-        {
-            return Enum.GetValues(typeof(MazeType))
-                .Cast<MazeType>()
-                .Skip(_selectedMazeTypeIndex)
-                .First();
-        }
-
-        private RectangularMazeConfig GetRectangularMazeConfig()
-        {
-            if (_selectedMazeTypeIndex != 0)
-            {
-                // Not a rectangular maze
-                return null;
-            }
-            
-            return new RectangularMazeConfig(_rectangularMazeGenerationDisplay.RowCount, 
-                _rectangularMazeGenerationDisplay.ColumnCount, 
-                _rectangularMazeGenerationDisplay.WallSetupAlgorithm);
         }
 
         private RenderOptions GetRenderOptions()
