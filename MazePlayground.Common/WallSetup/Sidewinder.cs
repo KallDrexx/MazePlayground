@@ -19,64 +19,72 @@ namespace MazePlayground.Common.WallSetup
             // previous cells in the visited collection, pick one at random and carve out in the non-straight direction.
             // Then clear the visited collection and continue on.
             //
-            // This algorithm is only meant for rectangular mazes with no masking/or holes.  It expects to start in a
-            // corner with only 2 available directions and will pick which one is straight and which is not based on
-            // those options.
+            // This algorithm is only meant for rectangular mazes with no masking/or holes.
             
-            var allCells = maze.AllCells;
-            var firstCell = allCells[0];
-            var wallsForCell = maze.GetWallsForCell(firstCell);
-            if (wallsForCell.Count != 2)
+            var rectMaze = (RectangularMaze) maze;
+            var potentialNorthernPasses = new List<CellWall>();
+            foreach (var cell in rectMaze.Cells)
             {
-                throw new InvalidOperationException("First cell did not have exactly 2 neighbors");
-            }
-
-            var straightLinkId = wallsForCell[0].LinkId;
-            var nonStraightLinkId = wallsForCell[1].LinkId;
-            var visitedCells = new List<Cell>();
-            foreach (var cell in allCells)
-            {
-                wallsForCell = maze.GetWallsForCell(cell)
-                    .Where(x => x.LinkId == straightLinkId || x.LinkId == nonStraightLinkId)
-                    .ToArray();
-
-                var hasStraightWall = wallsForCell.Any(x => x.LinkId == straightLinkId);
-                var hasNonStraightWall = wallsForCell.Any(x => x.LinkId == nonStraightLinkId);
-
-                if (!hasStraightWall && !hasNonStraightWall)
+                var neighbors = GetNeighbors(rectMaze, cell);
+                if (neighbors.North == null && neighbors.East == null)
                 {
-                    // Most likely on last cell so ignore
+                    // top-right cell, nothing we can do from here
                 }
-                else if (hasStraightWall && !hasNonStraightWall)
+                else if (neighbors.North == null)
                 {
-                    // Most likely last section so just go straight
-                    LinkCells(maze, cell, wallsForCell.Single(x => x.LinkId == straightLinkId));
+                    // Top row, just go east.  No need to add to the visited list since this column can be ignored
+                    neighbors.East.IsPassable = true;
                 }
-                else if (hasStraightWall && _random.Next(0, 2) == 0)
+                else if (neighbors.East == null)
                 {
-                    // We have both a straight and non-straight wall, and randomization chose to go straight
-                    visitedCells.Add(cell);
-                    LinkCells(maze, cell, wallsForCell.Single(x => x.LinkId == straightLinkId));
+                    // Last column in the non-northern row
+                    potentialNorthernPasses.Add(neighbors.North);
+                    var cellWallFromSet = potentialNorthernPasses[_random.Next(0, potentialNorthernPasses.Count)];
+                    cellWallFromSet.IsPassable = true;
+                    potentialNorthernPasses.Clear();
                 }
                 else
                 {
-                    // We either don't have a straight wall (end of a row) or randomization told us not to go straight.
-                    // If we got here it also means we *do* have a non-straight wall, and
-                    visitedCells.Add(cell);
-                    var cellFromSet = visitedCells[_random.Next(0, visitedCells.Count)];
-                    var cellNonStraightWall = maze.GetWallsForCell(cellFromSet).Single(x => x.LinkId == nonStraightLinkId);
-                    LinkCells(maze, cell, cellNonStraightWall);
-                    
-                    visitedCells.Clear();
+                    // Non top row and not last column
+                    potentialNorthernPasses.Add(neighbors.North);
+                    var carveEast = _random.Next(0, 2) == 0;
+                    if (carveEast)
+                    {
+                        neighbors.East.IsPassable = true;
+                        potentialNorthernPasses.Add(neighbors.North);
+                    }
+                    else
+                    {
+                        var cellWallFromSet = potentialNorthernPasses[_random.Next(0, potentialNorthernPasses.Count)];
+                        cellWallFromSet.IsPassable = true;
+                        potentialNorthernPasses.Clear();
+                    }
                 }
             }
         }
 
-        private static void LinkCells(IMaze maze, Cell cell, CellWall wall)
+        private static Neighbors GetNeighbors(RectangularMaze maze, Cell cell)
         {
-            var oppositeLinkId = maze.GetOppositeLinkId(wall.LinkId);
-            cell.LinkToOtherCell(wall.CellOnOtherSide, wall.LinkId);
-            wall.CellOnOtherSide.LinkToOtherCell(cell, oppositeLinkId);
+            var position = maze.GetPositionOfCell(cell);
+            var neighborPositions = cell.CellWalls
+                .Select(x => new {wall = x, position = maze.GetPositionOfCell(x.GetOtherCell(cell))})
+                .ToArray();
+
+            var north = neighborPositions.Where(x => x.position.row == position.row - 1).Select(x => x.wall).FirstOrDefault();
+            var east = neighborPositions.Where(x => x.position.column == position.column + 1).Select(x => x.wall).FirstOrDefault();
+            return new Neighbors(north, east);
+        }
+
+        private struct Neighbors
+        {
+            public readonly CellWall North;
+            public readonly CellWall East;
+
+            public Neighbors(CellWall north, CellWall east)
+            {
+                North = north;
+                East = east;
+            }
         }
     }
 }

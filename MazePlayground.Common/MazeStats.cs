@@ -45,7 +45,7 @@ namespace MazePlayground.Common
             var allCells = maze.AllCells;
             foreach (var cell in allCells)
             {
-                if (cell.LinkIdToCellMap.Count == 1)
+                if (cell.CellWalls.Count == 1)
                 {
                     deadEndCount++;
                 }

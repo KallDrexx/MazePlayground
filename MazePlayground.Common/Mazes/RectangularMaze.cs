@@ -31,6 +31,23 @@ namespace MazePlayground.Common.Mazes
             {
                 var index = (row * columnCount) + column;
                 var cell = new Cell();
+                
+                // Setup adjacent walls
+                var northernCell = row > 0 ? GetCell(row - 1, column) : null;
+                if (northernCell != null)
+                {
+                    var wall = new CellWall(cell, northernCell);
+                    cell.CellWalls.Add(wall);
+                    northernCell.CellWalls.Add(wall);
+                }
+                
+                var westernCell = column > 0 ? GetCell(row, column - 1) : null;
+                if (westernCell != null)
+                {
+                    var wall = new CellWall(cell, westernCell);
+                    cell.CellWalls.Add(wall);
+                    westernCell.CellWalls.Add(wall);
+                }
 
                 Cells[index] = cell;
                 _cellIndexMap[cell] = index;
@@ -44,103 +61,6 @@ namespace MazePlayground.Common.Mazes
         {
             var index = _cellIndexMap[cell];
             return GetPositionFromIndex(index);
-        }
-
-        public Cell GetCellLinkedInDirection(Cell source, Direction direction)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-
-            var linkId = GetLinkIdForDirection(direction);
-            return source.LinkIdToCellMap.TryGetValue(linkId, out var otherCell)
-                ? otherCell
-                : null;
-        }
-
-        public IReadOnlyList<CellWall> GetWallsForCell(Cell cell)
-        {
-                if (cell == null) throw new ArgumentNullException(nameof(cell));
-
-                var (row, column) = GetPositionOfCell(cell);
-                return new[] {Direction.North, Direction.East, Direction.South, Direction.West}
-                    .Select(x => new CellWall(GetLinkIdForDirection(x), GetCellInDirection(row, column, x)))
-                    .Where(x => x.CellOnOtherSide != null)
-                    .ToArray();
-        }
-
-        public byte GetOppositeLinkId(byte linkId)
-        {
-            var direction = GetDirectionForLinkId(linkId);
-            var oppositeDirection = GetOppositeDirection(direction);
-            return GetLinkIdForDirection(oppositeDirection);
-        }
-        
-        private Cell GetCellInDirection(int row, int column, Direction direction)
-        {
-            switch (direction)
-            {
-                case Direction.North:
-                    row -= 1;
-                    break;
-                
-                case Direction.South:
-                    row += 1;
-                    break;
-                
-                case Direction.East:
-                    column += 1;
-                    break;
-                
-                case Direction.West:
-                    column -= 1;
-                    break;
-                
-                default:
-                    throw new NotSupportedException($"Unsupported direction {direction}");
-            }
-
-            return GetCell(row, column);
-        }
-
-        private static Direction GetOppositeDirection(Direction direction)
-        {
-            switch (direction)
-            {
-                case Direction.North: return Direction.South;
-                case Direction.South: return Direction.North;
-                case Direction.East: return Direction.West;
-                case Direction.West: return Direction.East;
-                
-                default:
-                    throw new NotSupportedException($"Unsupported direction {direction}");
-            }
-        }
-
-        private static byte GetLinkIdForDirection(Direction direction)
-        {
-            switch (direction)
-            {
-                case Direction.North: return 1;
-                case Direction.South: return 2;
-                case Direction.East: return 3;
-                case Direction.West: return 4;
-                
-                default:
-                    throw new NotSupportedException($"Unsupported direction {direction}");
-            }
-        }
-
-        private static Direction GetDirectionForLinkId(byte linkId)
-        {
-            switch (linkId)
-            {
-                case 1: return Direction.North;
-                case 2: return Direction.South;
-                case 3: return Direction.East;
-                case 4: return Direction.West;
-                
-                default:
-                    throw new NotSupportedException($"Link id {linkId} not supported");
-            }
         }
 
         private void SetupWalls(WallSetupAlgorithm setupAlgorithm)
@@ -203,7 +123,7 @@ namespace MazePlayground.Common.Mazes
             var startingRow = _random.Next(0, RowCount);
             StartingCell = GetCell(startingRow, 0);
             
-            var distanceInfo = CellDistanceSolver.GetDistancesFromCell(StartingCell);
+            var distanceInfo = CellDistanceSolver.GetPassableDistancesFromCell(StartingCell);
             FinishingCell = FindFarthestEdgeCell(distanceInfo);
         }
 

@@ -13,42 +13,56 @@ namespace MazePlayground.Common.WallSetup
             if (maze == null) throw new ArgumentNullException(nameof(maze));
             
             // For each cell we want a 50% chance to go one of two directions.  This algorithm only works for
-            // unmasked rectangular mazes with no holes.  We assume the first cell is a corner and use those
-            // two directions as our cutout paths.
+            // unmasked rectangular mazes with no holes. 
 
-            var allCells = maze.AllCells;
-            var firstCell = allCells[0];
-            var wallsForCell = maze.GetWallsForCell(firstCell);
-            if (wallsForCell.Count != 2)
+            var rectMaze = (RectangularMaze) maze;
+            foreach (var cell in rectMaze.Cells)
             {
-                throw new InvalidOperationException("First cell did not have exactly 2 neighbors");
+                var neighbors = GetNeighbors(rectMaze, cell);
+                if (neighbors.North != null && neighbors.East == null)
+                {
+                    neighbors.North.IsPassable = true;
+                }
+                else if (neighbors.North == null && neighbors.East != null)
+                {
+                    neighbors.East.IsPassable = true;
+                }
+                else if (neighbors.North != null)
+                {
+                    var carveEast = _random.Next(0, 2) == 0;
+                    if (carveEast)
+                    {
+                        neighbors.East.IsPassable = true;
+                    }
+                    else
+                    {
+                        neighbors.North.IsPassable = true;
+                    }
+                }
             }
+        }
 
-            var linkIds = new[] {wallsForCell[0].LinkId, wallsForCell[1].LinkId};
-            foreach (var cell in allCells)
+        private static Neighbors GetNeighbors(RectangularMaze maze, Cell cell)
+        {
+            var position = maze.GetPositionOfCell(cell);
+            var neighborPositions = cell.CellWalls
+                .Select(x => new {wall = x, position = maze.GetPositionOfCell(x.GetOtherCell(cell))})
+                .ToArray();
+
+            var north = neighborPositions.Where(x => x.position.row == position.row - 1).Select(x => x.wall).FirstOrDefault();
+            var east = neighborPositions.Where(x => x.position.column == position.column + 1).Select(x => x.wall).FirstOrDefault();
+            return new Neighbors(north, east);
+        }
+
+        private struct Neighbors
+        {
+            public readonly CellWall North;
+            public readonly CellWall East;
+
+            public Neighbors(CellWall north, CellWall east)
             {
-                wallsForCell = maze.GetWallsForCell(cell)
-                    .Where(x => x.LinkId == linkIds[0] || x.LinkId == linkIds[1])
-                    .ToArray();
-
-                CellWall wall;
-                if (wallsForCell.Count == 2)
-                {
-                    wall = wallsForCell[_random.Next(0, 2)];
-                }
-                else if (wallsForCell.Count == 1)
-                {
-                    wall = wallsForCell[0];
-                }
-                else
-                {
-                    // Theoretically we should be bottom right
-                    continue;
-                }
-
-                var oppositeLinkid = maze.GetOppositeLinkId(wall.LinkId);
-                cell.LinkToOtherCell(wall.CellOnOtherSide, wall.LinkId);
-                wall.CellOnOtherSide.LinkToOtherCell(cell, oppositeLinkid);
+                North = north;
+                East = east;
             }
         }
     }

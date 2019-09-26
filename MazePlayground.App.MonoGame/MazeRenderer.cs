@@ -46,8 +46,8 @@ namespace MazePlayground.App.MonoGame
         {
             _currentMaze = maze;
             _currentStats = mazeStats;
-            //_mazeDistanceInfo = CellDistanceSolver.GetDistancesFromCell(_currentMaze.StartingCell);
-            //_mazeShortestPathInfo = ShortestPathSolver.Solve(_currentMaze.FinishingCell, _mazeDistanceInfo);
+            _mazeDistanceInfo = CellDistanceSolver.GetPassableDistancesFromCell(_currentMaze.StartingCell);
+            _mazeShortestPathInfo = ShortestPathSolver.Solve(_currentMaze.FinishingCell, _mazeDistanceInfo);
             
             UpdateMazeRendering();
             ResetMazePositionAndScaling();

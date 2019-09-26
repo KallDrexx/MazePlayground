@@ -30,27 +30,21 @@ namespace MazePlayground.Common.WallSetup
             var currentCell = firstCellInPath;
             while (unvisitedCells.Any())
             {
-                var walls = maze.GetWallsForCell(currentCell);
+                var walls = currentCell.CellWalls;
                 var wall = walls[_random.Next(0, walls.Count)];
-                if (visitedCells.Contains(wall.CellOnOtherSide))
+                if (visitedCells.Contains(wall.GetOtherCell(currentCell)))
                 {
                     // Carve out the path
                     var firstCell = firstCellInPath;
                     foreach (var wallToOpen in path)
                     {
-                        var oppositeLinkId = maze.GetOppositeLinkId(wallToOpen.LinkId);
-                        
-                        firstCell.LinkToOtherCell(wallToOpen.CellOnOtherSide, wallToOpen.LinkId);
-                        wallToOpen.CellOnOtherSide.LinkToOtherCell(firstCell, oppositeLinkId);
-
+                        wallToOpen.IsPassable = true;
                         visitedCells.Add(firstCell);
                         unvisitedCells.Remove(firstCell);
-                        firstCell = wallToOpen.CellOnOtherSide;
+                        firstCell = wallToOpen.GetOtherCell(firstCell);
                     }
 
-                    var wallOppositeLinkId = maze.GetOppositeLinkId(wall.LinkId);
-                    firstCell.LinkToOtherCell(wall.CellOnOtherSide, wall.LinkId);
-                    wall.CellOnOtherSide.LinkToOtherCell(firstCell, wallOppositeLinkId);
+                    wall.IsPassable = true;
                     visitedCells.Add(firstCell);
                     unvisitedCells.Remove(firstCell);
                     path.Clear();
@@ -66,16 +60,16 @@ namespace MazePlayground.Common.WallSetup
                         break;
                     }
                 }
-                else if (firstCellInPath == wall.CellOnOtherSide)
+                else if (firstCellInPath == wall.GetOtherCell(currentCell))
                 {
                     // Looped back to the beginning so clear the whole path
                     path.Clear();
-                    currentCell = wall.CellOnOtherSide;
+                    currentCell = wall.GetOtherCell(currentCell);
                 }
                 else
                 {
                     var pathIndex = path.Select((pathWall, index) => new {pathWall, index})
-                        .Where(x => x.pathWall.CellOnOtherSide == wall.CellOnOtherSide)
+                        .Where(x => x.pathWall.GetOtherCell(currentCell) == wall.GetOtherCell(currentCell))
                         .Select(x => (int?) x.index)
                         .FirstOrDefault();
 
@@ -92,7 +86,7 @@ namespace MazePlayground.Common.WallSetup
                         path.Add(wall);
                     }
 
-                    currentCell = wall.CellOnOtherSide;
+                    currentCell = wall.GetOtherCell(currentCell);
                 }
             }
         }

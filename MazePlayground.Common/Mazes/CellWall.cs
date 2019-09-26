@@ -1,14 +1,23 @@
 namespace MazePlayground.Common.Mazes
 {
-    public struct CellWall
+    /// <summary>
+    /// Represents a wall between two cells that may be passable or not.
+    /// </summary>
+    public class CellWall
     {
-        public readonly byte LinkId;
-        public readonly Cell CellOnOtherSide;
-
-        public CellWall(byte linkId, Cell cellOnOtherSide)
+        public Cell First { get; }
+        public Cell Second { get; }
+        public bool IsPassable { get; set; }
+        
+        public CellWall(Cell first, Cell second)
         {
-            LinkId = linkId;
-            CellOnOtherSide = cellOnOtherSide;
+            First = first;
+            Second = second;
+        }
+
+        public Cell GetOtherCell(Cell notThisCell)
+        {
+            return First == notThisCell ? Second : First;
         }
     }
 }

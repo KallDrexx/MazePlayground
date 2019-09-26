@@ -24,8 +24,8 @@ namespace MazePlayground.Common.WallSetup
             
             while (visitedCells.Count < allCells.Count)
             {
-                var walls = maze.GetWallsForCell(currentCell)
-                    .Where(x => !visitedCells.Contains(x.CellOnOtherSide))
+                var walls = currentCell.CellWalls
+                    .Where(x => !visitedCells.Contains(x.GetOtherCell(currentCell)))
                     .ToArray();
 
                 if (walls.Length == 0)
@@ -37,17 +37,14 @@ namespace MazePlayground.Common.WallSetup
                             continue;
                         }
 
-                        var visitedWalls = maze.GetWallsForCell(cell)
-                            .Where(x => visitedCells.Contains(x.CellOnOtherSide))
+                        var visitedWalls = cell.CellWalls
+                            .Where(x => visitedCells.Contains(x.GetOtherCell(cell)))
                             .ToArray();
 
                         if (visitedWalls.Any())
                         {
                             var visitedWall = visitedWalls[_random.Next(0, visitedWalls.Length)];
-                            var oppositeLinkId = maze.GetOppositeLinkId(visitedWall.LinkId);
-                            cell.LinkToOtherCell(visitedWall.CellOnOtherSide, visitedWall.LinkId);
-                            visitedWall.CellOnOtherSide.LinkToOtherCell(cell, oppositeLinkId);
-
+                            visitedWall.IsPassable = true;
                             visitedCells.Add(cell);
                             currentCell = cell;
                             break;
@@ -57,11 +54,9 @@ namespace MazePlayground.Common.WallSetup
                 else
                 {
                     var wall = walls[_random.Next(0, walls.Length)];
-                    var oppositeLinkId = maze.GetOppositeLinkId(wall.LinkId);
-                    currentCell.LinkToOtherCell(wall.CellOnOtherSide, wall.LinkId);
-                    wall.CellOnOtherSide.LinkToOtherCell(currentCell, oppositeLinkId);
-                    visitedCells.Add(wall.CellOnOtherSide);
-                    currentCell = wall.CellOnOtherSide;
+                    wall.IsPassable = true;
+                    visitedCells.Add(wall.GetOtherCell(currentCell));
+                    currentCell = wall.GetOtherCell(currentCell);
                 }
             }
         }

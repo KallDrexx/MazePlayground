@@ -7,12 +7,12 @@ namespace MazePlayground.Common.Solvers
 {
     public static class CellDistanceSolver
     {
-        public static DistanceInfo GetDistancesFromCell(Cell startingCell)
+        public static DistanceInfo GetPassableDistancesFromCell(Cell startingCell)
         {
             if (startingCell == null) throw new ArgumentNullException(nameof(startingCell));
             
             var map = new Dictionary<Cell, int>();
-            MapCellDistance(startingCell, map, out var farthestCell);
+            MapPassableCellDistance(startingCell, map, out var farthestCell);
             
             return new DistanceInfo(map, farthestCell);
         }
@@ -27,7 +27,7 @@ namespace MazePlayground.Common.Solvers
             return new DistanceInfo(map, farthestCell);
         }
         
-        private static void MapCellDistance(Cell cellToCheck, Dictionary<Cell, int> map, out Cell farthestCell)
+        private static void MapPassableCellDistance(Cell cellToCheck, Dictionary<Cell, int> map, out Cell farthestCell)
         {
             var distance = 0;
             var farthestCellDistance = 0;
@@ -45,7 +45,7 @@ namespace MazePlayground.Common.Solvers
                     }
 
                     map.Add(cell, distance);
-                    nextCellsToCheck.AddRange(cell.LinkIdToCellMap.Values);
+                    nextCellsToCheck.AddRange(cell.CellWalls.Where(x => x.IsPassable).Select(x => x.GetOtherCell(cell)));
 
                     if (distance > farthestCellDistance)
                     {
@@ -77,8 +77,7 @@ namespace MazePlayground.Common.Solvers
                     }
 
                     map.Add(cell, distance);
-                    var walls = maze.GetWallsForCell(cell);
-                    nextCellsToCheck.AddRange(walls.Select(x => x.CellOnOtherSide));
+                    nextCellsToCheck.AddRange(cell.CellWalls.Select(x => x.GetOtherCell(cell)));
 
                     if (distance > farthestCellDistance)
                     {

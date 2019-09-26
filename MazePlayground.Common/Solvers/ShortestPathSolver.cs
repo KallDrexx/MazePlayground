@@ -19,7 +19,11 @@ namespace MazePlayground.Common.Solvers
             {
                 nextCellWasFound = false;
                 var distance = distanceInfo.DistanceFromStartMap[currentCell];
-                foreach (var linkedCell in currentCell.LinkIdToCellMap.Values)
+                var adjacentCells = currentCell.CellWalls.Where(x => x.IsPassable)
+                    .Select(x => x.GetOtherCell(currentCell))
+                    .ToArray();
+                
+                foreach (var linkedCell in adjacentCells)
                 {
                     if (distanceInfo.DistanceFromStartMap.ContainsKey(linkedCell))
                     {

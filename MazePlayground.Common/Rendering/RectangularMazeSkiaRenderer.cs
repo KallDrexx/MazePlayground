@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using MazePlayground.Common.Mazes;
 using MazePlayground.Common.Solvers;
 using SkiaSharp;
@@ -48,22 +49,23 @@ namespace MazePlayground.Common.Rendering
                     var isEastFacingExit = (maze.FinishingCell == cell || maze.StartingCell == cell) && column == maze.ColumnCount - 1;
                     var isWestFacingExit = (maze.FinishingCell == cell || maze.StartingCell == cell) && column == 0;
 
-                    if (maze.GetCellLinkedInDirection(cell, RectangularMaze.Direction.North) == null && !isNorthFacingExit)
+                    var passableDirections = GetPassableDirections(maze, cell);
+                    if (!passableDirections.North && !isNorthFacingExit)
                     {
                         surface.Canvas.DrawLine(leftX, topY, rightX, topY, whitePaint);
                     }
 
-                    if (maze.GetCellLinkedInDirection(cell, RectangularMaze.Direction.South) == null && !isSouthFacingExit)
+                    if (!passableDirections.South && !isSouthFacingExit)
                     {
                         surface.Canvas.DrawLine(leftX, bottomY, rightX, bottomY, whitePaint);
                     }
 
-                    if (maze.GetCellLinkedInDirection(cell, RectangularMaze.Direction.East) == null && !isEastFacingExit)
+                    if (!passableDirections.East && !isEastFacingExit)
                     {
                         surface.Canvas.DrawLine(rightX, topY, rightX, bottomY, whitePaint);
                     }
 
-                    if (maze.GetCellLinkedInDirection(cell, RectangularMaze.Direction.West) == null && !isWestFacingExit)
+                    if (!passableDirections.West && !isWestFacingExit)
                     {
                         surface.Canvas.DrawLine(leftX, topY, leftX, bottomY, whitePaint);
                     }
@@ -108,6 +110,37 @@ namespace MazePlayground.Common.Rendering
                 }
 
                 return surface.Snapshot();
+            }
+        }
+
+        private static PassableDirections GetPassableDirections(RectangularMaze maze, Cell cell)
+        {
+            var position = maze.GetPositionOfCell(cell);
+            var neighborPositions = cell.CellWalls
+                .Where(x => x.IsPassable)
+                .Select(x => maze.GetPositionOfCell(x.GetOtherCell(cell)))
+                .ToArray();
+
+            var northPassable = neighborPositions.Any(x => x.row == position.row - 1);
+            var southPassable = neighborPositions.Any(x => x.row == position.row + 1);
+            var eastPassable = neighborPositions.Any(x => x.column == position.column + 1);
+            var westPassable = neighborPositions.Any(x => x.column == position.column - 1);
+            return new PassableDirections(northPassable, southPassable, eastPassable, westPassable);
+        }
+
+        private struct PassableDirections
+        {
+            public readonly bool North;
+            public readonly bool South;
+            public readonly bool East;
+            public readonly bool West;
+
+            public PassableDirections(bool north, bool south, bool east, bool west)
+            {
+                North = north;
+                South = south;
+                East = east;
+                West = west;
             }
         }
     }

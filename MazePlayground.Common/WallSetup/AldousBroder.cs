@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using MazePlayground.Common.Mazes;
 
 namespace MazePlayground.Common.WallSetup
@@ -22,18 +23,15 @@ namespace MazePlayground.Common.WallSetup
             
             while (visitedCells.Count < allCells.Count)
             {
-                var walls = maze.GetWallsForCell(currentCell);
-                var wall = walls[_random.Next(0, walls.Count)];
-                if (!visitedCells.Contains(wall.CellOnOtherSide))
+                var walls = currentCell.CellWalls.ToArray();
+                var wall = walls[_random.Next(0, walls.Length)];
+                if (!visitedCells.Contains(wall.GetOtherCell(currentCell)))
                 {
-                    var oppositeLinkId = maze.GetOppositeLinkId(wall.LinkId);
-                    currentCell.LinkToOtherCell(wall.CellOnOtherSide, wall.LinkId);
-                    wall.CellOnOtherSide.LinkToOtherCell(currentCell, oppositeLinkId);
-
-                    visitedCells.Add(wall.CellOnOtherSide);
+                    wall.IsPassable = true;
+                    visitedCells.Add(wall.GetOtherCell(currentCell));
                 }
 
-                currentCell = wall.CellOnOtherSide;
+                currentCell = wall.GetOtherCell(currentCell);
             }
         }
     }

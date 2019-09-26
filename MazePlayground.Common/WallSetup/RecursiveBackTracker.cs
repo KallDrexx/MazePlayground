@@ -26,19 +26,18 @@ namespace MazePlayground.Common.WallSetup
 
             while (visitedCells.Count < allCells.Count)
             {
-                var walls = maze.GetWallsForCell(currentCell)
-                    .Where(x => !visitedCells.Contains(x.CellOnOtherSide))
+                var walls = currentCell.CellWalls
+                    .Where(x => !visitedCells.Contains(x.GetOtherCell(currentCell)))
                     .ToArray();
 
                 if (walls.Any())
                 {
                     var wall = walls[_random.Next(0, walls.Length)];
-                    var oppositeLinkId = maze.GetOppositeLinkId(wall.LinkId);
-                    currentCell.LinkToOtherCell(wall.CellOnOtherSide, wall.LinkId);
-                    wall.CellOnOtherSide.LinkToOtherCell(currentCell, oppositeLinkId);
-                    visitedCells.Add(wall.CellOnOtherSide);
-                    path.Push(wall.CellOnOtherSide);
-                    currentCell = wall.CellOnOtherSide;
+                    wall.IsPassable = true;
+                    var adjacentCell = wall.GetOtherCell(currentCell);
+                    visitedCells.Add(adjacentCell);
+                    path.Push(adjacentCell);
+                    currentCell = adjacentCell;
                 }
                 else
                 {
