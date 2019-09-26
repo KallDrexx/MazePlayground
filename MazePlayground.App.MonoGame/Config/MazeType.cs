@@ -4,5 +4,6 @@ namespace MazePlayground.App.MonoGame.Config
     {
         Rectangular,
         Masked,
+        Circular,
     }
 }

@@ -35,8 +35,7 @@ namespace MazePlayground.App.MonoGame
             _maskCreationWindow = new MaskCreationWindow(_graphics.GraphicsDevice);
             _mazeRenderer = new MazeRenderer(_graphics.GraphicsDevice);
             _messageDisplayWindow = new MessageDisplayWindow();
-            _logicController = new LogicController(_mazeConfigWindow, _mazeRenderer, _maskCreationWindow,
-	            _graphics.GraphicsDevice, _messageDisplayWindow);
+            _logicController = new LogicController(_mazeConfigWindow, _mazeRenderer, _maskCreationWindow, _messageDisplayWindow);
 
             base.Initialize();
         }

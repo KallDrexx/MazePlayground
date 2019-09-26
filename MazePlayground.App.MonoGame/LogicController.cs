@@ -1,15 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using MazePlayground.App.MonoGame.Config;
 using MazePlayground.App.MonoGame.Ui;
 using MazePlayground.Common;
 using MazePlayground.Common.Mazes;
-using MazePlayground.Common.WallSetup;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using SkiaSharp;
 
 namespace MazePlayground.App.MonoGame
 {
@@ -18,7 +14,6 @@ namespace MazePlayground.App.MonoGame
         private readonly MazeConfigWindow _mazeConfigWindow;
         private readonly MaskCreationWindow _maskCreationWindow;
         private readonly MazeRenderer _mazeRenderer;
-        private readonly GraphicsDevice _graphicsDevice;
         private readonly MessageDisplayWindow _messageDisplayWindow;
         private Point? _mousePositionLastFrame;
         private int _scrollWheelLastFrame;
@@ -27,13 +22,11 @@ namespace MazePlayground.App.MonoGame
         public LogicController(MazeConfigWindow mazeConfigWindow, 
             MazeRenderer mazeRenderer, 
             MaskCreationWindow maskCreationWindow, 
-            GraphicsDevice graphicsDevice, 
             MessageDisplayWindow messageDisplayWindow)
         {
             _mazeConfigWindow = mazeConfigWindow;
             _mazeRenderer = mazeRenderer;
             _maskCreationWindow = maskCreationWindow;
-            _graphicsDevice = graphicsDevice;
             _messageDisplayWindow = messageDisplayWindow;
         }
 
@@ -163,6 +156,9 @@ namespace MazePlayground.App.MonoGame
                         _maskCreationWindow.ColumnCount, 
                         _maskCreationWindow.MaskData, 
                         _mazeConfigWindow.SelectedWallSetupAlgorithm);
+                
+                case MazeType.Circular:
+                    return new CircularMaze(12, 6, 2);
                 
                 default:
                     throw new NotSupportedException($"No known way to create maze of type {_mazeConfigWindow.MazeType}");

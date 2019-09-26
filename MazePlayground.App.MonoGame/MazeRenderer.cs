@@ -46,8 +46,8 @@ namespace MazePlayground.App.MonoGame
         {
             _currentMaze = maze;
             _currentStats = mazeStats;
-            _mazeDistanceInfo = CellDistanceSolver.GetDistancesFromCell(_currentMaze.StartingCell);
-            _mazeShortestPathInfo = ShortestPathSolver.Solve(_currentMaze.FinishingCell, _mazeDistanceInfo);
+            //_mazeDistanceInfo = CellDistanceSolver.GetDistancesFromCell(_currentMaze.StartingCell);
+            //_mazeShortestPathInfo = ShortestPathSolver.Solve(_currentMaze.FinishingCell, _mazeDistanceInfo);
             
             UpdateMazeRendering();
             ResetMazePositionAndScaling();
@@ -120,6 +120,9 @@ namespace MazePlayground.App.MonoGame
                 
                 case MaskedMaze maskedMaze:
                     return maskedMaze.RenderWithSkia(_renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo);
+                
+                case CircularMaze circularMaze:
+                    return circularMaze.RenderWithSkia(_renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo);
                 
                 default:
                     throw new NotSupportedException($"Maze type {_currentMaze.GetType()} cannot be rendered");
