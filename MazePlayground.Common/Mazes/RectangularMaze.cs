@@ -10,8 +10,6 @@ namespace MazePlayground.Common.Mazes
     {
         private readonly Random _random = new Random();
         private readonly Dictionary<Cell, int> _cellIndexMap = new Dictionary<Cell, int>();
-        
-        public enum Direction { North, South, East, West }
 
         public Cell[] Cells { get; }
         public int RowCount { get; }

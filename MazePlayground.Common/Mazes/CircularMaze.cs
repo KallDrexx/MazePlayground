@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MazePlayground.Common.WallSetup;
 
 namespace MazePlayground.Common.Mazes
 {
@@ -43,6 +44,8 @@ namespace MazePlayground.Common.Mazes
 
             _cells = cells.ToArray();
             BuildWalls();
+            
+            new RecursiveBackTracker().Run(this);
 
             StartingCell = _cells[0];
             FinishingCell = _cells.Last(); // temporary

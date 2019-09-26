@@ -158,7 +158,7 @@ namespace MazePlayground.App.MonoGame
                         _mazeConfigWindow.SelectedWallSetupAlgorithm);
                 
                 case MazeType.Circular:
-                    return new CircularMaze(12, 6, 2);
+                    return new CircularMaze(13, 12, 3);
                 
                 default:
                     throw new NotSupportedException($"No known way to create maze of type {_mazeConfigWindow.MazeType}");

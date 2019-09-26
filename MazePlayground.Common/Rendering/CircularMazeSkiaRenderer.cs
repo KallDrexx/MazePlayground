@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using MazePlayground.Common.Mazes;
 using MazePlayground.Common.Solvers;
@@ -45,42 +44,46 @@ namespace MazePlayground.Common.Rendering
                         continue;
                     }
 
-                    var firstPosition = maze.GetPositionOfCell(wall.First);
-                    var secondPosition = maze.GetPositionOfCell(wall.Second);
-                    if (firstPosition.RingNumber == secondPosition.RingNumber)
+                    if (!wall.IsPassable)
                     {
-                        // These cells border on the same ring, so find the angle that's the same and draw a line for it
-                        var angle = Math.Abs(NormalizeAngle(firstPosition.StartingDegree) - NormalizeAngle(secondPosition.EndingDegree)) < 0.001
-                            ? firstPosition.StartingDegree
-                            : firstPosition.EndingDegree;
+                        var firstPosition = maze.GetPositionOfCell(wall.First);
+                        var secondPosition = maze.GetPositionOfCell(wall.Second);
+                        if (firstPosition.RingNumber == secondPosition.RingNumber)
+                        {
+                            // These cells border on the same ring, so find the angle that's the same and draw a line for it
+                            var angle = Math.Abs(NormalizeAngle(firstPosition.StartingDegree) -
+                                                 NormalizeAngle(secondPosition.EndingDegree)) < 0.001
+                                ? firstPosition.StartingDegree
+                                : firstPosition.EndingDegree;
 
-                        var lowerRing = Math.Min(firstPosition.RingNumber, secondPosition.RingNumber);
-                        var innerRadius = GetRadiusAtRing(lowerRing - 1);
-                        var outerRadius = GetRadiusAtRing(lowerRing);
+                            var lowerRing = Math.Min(firstPosition.RingNumber, secondPosition.RingNumber);
+                            var innerRadius = GetRadiusAtRing(lowerRing - 1);
+                            var outerRadius = GetRadiusAtRing(lowerRing);
 
-                        var lineStart = GetCoords(innerRadius, angle);
-                        var lineEnd = GetCoords(outerRadius, angle);
-                        surface.Canvas.DrawLine(lineStart.x + imageCenter, 
-                            lineStart.y + imageCenter, 
-                            lineEnd.x + imageCenter, 
-                            lineEnd.y + imageCenter, 
-                            whitePaint);
-                    }
-                    else
-                    {
-                        var innerRing = Math.Min(firstPosition.RingNumber, secondPosition.RingNumber);
-                        var radius = GetRadiusAtRing(innerRing);
-                        var bounds = new SKRect(imageCenter - radius, 
-                            imageCenter - radius, 
-                            imageCenter + radius, 
-                            imageCenter + radius);
-                        
-                        var startingDegree = Math.Max(firstPosition.StartingDegree, secondPosition.EndingDegree);
-                        var endingDegree = Math.Min(firstPosition.EndingDegree, secondPosition.StartingDegree);
-                        
-                        var path = new SKPath();
-                        path.AddArc(bounds, startingDegree, endingDegree - startingDegree);
-                        surface.Canvas.DrawPath(path, whitePaint);
+                            var lineStart = GetCoords(innerRadius, angle);
+                            var lineEnd = GetCoords(outerRadius, angle);
+                            surface.Canvas.DrawLine(lineStart.x + imageCenter,
+                                lineStart.y + imageCenter,
+                                lineEnd.x + imageCenter,
+                                lineEnd.y + imageCenter,
+                                whitePaint);
+                        }
+                        else
+                        {
+                            var innerRing = Math.Min(firstPosition.RingNumber, secondPosition.RingNumber);
+                            var radius = GetRadiusAtRing(innerRing);
+                            var bounds = new SKRect(imageCenter - radius,
+                                imageCenter - radius,
+                                imageCenter + radius,
+                                imageCenter + radius);
+
+                            var startingDegree = Math.Max(firstPosition.StartingDegree, secondPosition.EndingDegree);
+                            var endingDegree = Math.Min(firstPosition.EndingDegree, secondPosition.StartingDegree);
+
+                            var path = new SKPath();
+                            path.AddArc(bounds, startingDegree, endingDegree - startingDegree);
+                            surface.Canvas.DrawPath(path, whitePaint);
+                        }
                     }
 
                     renderedWalls.Add(wall);

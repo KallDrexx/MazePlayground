@@ -12,7 +12,6 @@ namespace MazePlayground.Common.Mazes
         private readonly Cell[] _cells;
         private readonly Dictionary<Cell, int> _cellIndexMap;
         
-        public enum Direction { North, South, East, West }
         public int RowCount { get; }
         public int ColumnCount { get; }
         public Cell StartingCell { get; private set; }
