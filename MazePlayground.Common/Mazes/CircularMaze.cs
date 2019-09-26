@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MazePlayground.Common.Mazes
 {
@@ -8,8 +9,6 @@ namespace MazePlayground.Common.Mazes
         private readonly Dictionary<Cell, CircularPosition> _cellPositionMap = new Dictionary<Cell, CircularPosition>();
         private readonly Dictionary<int, Cell[]> _cellsInRingMap = new Dictionary<int, Cell[]>();
         private readonly Cell[] _cells;
-        
-        public enum Direction { Clockwise, CounterClockwise, Inner, OuterClockwise, OuterCounterClockwise }
         
         public int RingCount { get; }
         public Cell StartingCell { get; }
@@ -43,19 +42,91 @@ namespace MazePlayground.Common.Mazes
             }
 
             _cells = cells.ToArray();
-        }
-        
-        public IReadOnlyList<CellWall> GetWallsForCell(Cell cell)
-        {
-            throw new NotImplementedException();
-        }
+            BuildWalls();
 
-        public byte GetOppositeLinkId(byte linkId)
-        {
-            throw new NotImplementedException();
+            StartingCell = _cells[0];
+            FinishingCell = _cells.Last(); // temporary
         }
 
         public CircularPosition GetPositionOfCell(Cell cell) => _cellPositionMap[cell];
+
+        private void BuildWalls()
+        {
+            for (var currentRing = 1; currentRing < RingCount; currentRing++)
+            {
+                var cellsInRing = _cellsInRingMap[currentRing];
+                var cellsInInnerRing = _cellsInRingMap[currentRing - 1];
+                var cellsInOuterRing = currentRing < RingCount - 1 ? _cellsInRingMap[currentRing + 1] : new Cell[0];
+
+                var cellsInOrder = cellsInRing.Select(x => new {cell = x, pos = _cellPositionMap[x]})
+                    .OrderBy(x => x.pos.StartingDegree)
+                    .Select(x => x.cell)
+                    .ToArray();
+                
+                for (var index = 0; index < cellsInOrder.Length; index++)
+                {
+                    var cell = cellsInOrder[index];
+                    var adjacentCells = new List<Cell>();
+                    
+                    // Find inner neighbor(s)
+                    if (currentRing == 1)
+                    {
+                        // Auto bind it to center cell
+                        adjacentCells.Add(_cells[0]);
+                    }
+                    else
+                    {
+                        adjacentCells.AddRange(cellsInInnerRing.Where(x => CheckIfCellsAlign(cell, x)));
+                    }
+                    
+                    // outer neighbors
+                    if (cellsInOuterRing.Any())
+                    {
+                        adjacentCells.AddRange(cellsInOuterRing.Where(x => CheckIfCellsAlign(cell, x)));
+                    }
+                    
+                    // Find next cell to either side
+                    adjacentCells.Add(index == 0 ? cellsInOrder[cellsInOrder.Length - 1] : cellsInOrder[index - 1]);
+                    adjacentCells.Add(index == cellsInOrder.Length - 1 ? cellsInOrder[0] : cellsInOrder[index + 1]);
+                    
+                    // build walls
+                    foreach (var adjacentCell in adjacentCells)
+                    {
+                        // Make sure this wall doesn't already exist
+                        if (adjacentCell.CellWalls.All(x => x.GetOtherCell(adjacentCell) != cell))
+                        {
+                            var wall = new CellWall(cell, adjacentCell);
+                            cell.CellWalls.Add(wall);
+                            adjacentCell.CellWalls.Add(wall);
+                        }
+                    }
+                }
+            }
+        }
+
+        private bool CheckIfCellsAlign(Cell first, Cell second)
+        {
+            var firstPosition = _cellPositionMap[first];
+            var secondPosition = _cellPositionMap[second];
+
+            // Cells are aligned if they are only one ring apart and if at least one wall lines up
+            if (Math.Abs(firstPosition.RingNumber - secondPosition.RingNumber) > 1)
+            {
+                return false;
+            }
+
+            if (Math.Abs(firstPosition.StartingDegree - secondPosition.StartingDegree) < 0.001)
+            {
+                return true;
+            }
+
+            if (Math.Abs(firstPosition.EndingDegree - secondPosition.EndingDegree) < 0.001)
+            {
+                return true;
+            }
+
+            return false;
+        }
 
         public struct CircularPosition : IEquatable<CircularPosition>
         {
@@ -72,9 +143,7 @@ namespace MazePlayground.Common.Mazes
 
             public override bool Equals(object obj)
             {
-                return obj is CircularPosition pos && 
-                       pos.RingNumber == RingNumber &&
-                       pos.StartingDegree == StartingDegree;
+                return obj is CircularPosition pos && Equals(pos);
             }
 
             public override int GetHashCode()
@@ -87,7 +156,7 @@ namespace MazePlayground.Common.Mazes
 
             public bool Equals(CircularPosition other)
             {
-                return RingNumber == other.RingNumber && StartingDegree == other.StartingDegree;
+                return RingNumber == other.RingNumber && Math.Abs(StartingDegree - other.StartingDegree) < .001;
             }
         }
     }

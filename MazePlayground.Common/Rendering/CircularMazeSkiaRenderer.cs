@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using MazePlayground.Common.Mazes;
 using MazePlayground.Common.Solvers;
 using SkiaSharp;
@@ -31,60 +34,77 @@ namespace MazePlayground.Common.Rendering
 
                 var whitePaint = new SKPaint {Color = SKColors.White, StrokeWidth = CellLineWidth, Style = SKPaintStyle.Stroke};
 
-                foreach (var cell in maze.AllCells)
+                var centerCell = maze.AllCells[0];
+                var wallsToRender = new Queue<CellWall>(centerCell.CellWalls);
+                var renderedWalls = new HashSet<CellWall>();
+                while (wallsToRender.Any())
                 {
-                    var position = maze.GetPositionOfCell(cell);
-                    if (position.RingNumber == 0)
+                    var wall = wallsToRender.Dequeue();
+                    if (renderedWalls.Contains(wall))
                     {
-                        // Special logic for the center cell since it's the only cell with 6 walls.  Let the non-center
-                        // cells deal with the wall logic and just do shading/labeling for this cell
+                        continue;
+                    }
+
+                    var firstPosition = maze.GetPositionOfCell(wall.First);
+                    var secondPosition = maze.GetPositionOfCell(wall.Second);
+                    if (firstPosition.RingNumber == secondPosition.RingNumber)
+                    {
+                        // These cells border on the same ring, so find the angle that's the same and draw a line for it
+                        var angle = Math.Abs(NormalizeAngle(firstPosition.StartingDegree) - NormalizeAngle(secondPosition.EndingDegree)) < 0.001
+                            ? firstPosition.StartingDegree
+                            : firstPosition.EndingDegree;
+
+                        var lowerRing = Math.Min(firstPosition.RingNumber, secondPosition.RingNumber);
+                        var innerRadius = GetRadiusAtRing(lowerRing - 1);
+                        var outerRadius = GetRadiusAtRing(lowerRing);
+
+                        var lineStart = GetCoords(innerRadius, angle);
+                        var lineEnd = GetCoords(outerRadius, angle);
+                        surface.Canvas.DrawLine(lineStart.x + imageCenter, 
+                            lineStart.y + imageCenter, 
+                            lineEnd.x + imageCenter, 
+                            lineEnd.y + imageCenter, 
+                            whitePaint);
                     }
                     else
                     {
-                        var innerRadius = GetRadiusAtRing(position.RingNumber - 1);
-                        var outerRadius = GetRadiusAtRing(position.RingNumber);
-                        var innerBounds = new SKRect(imageCenter - innerRadius, 
-                            imageCenter - innerRadius,
-                            imageCenter + innerRadius, 
-                            imageCenter + innerRadius);
+                        var innerRing = Math.Min(firstPosition.RingNumber, secondPosition.RingNumber);
+                        var radius = GetRadiusAtRing(innerRing);
+                        var bounds = new SKRect(imageCenter - radius, 
+                            imageCenter - radius, 
+                            imageCenter + radius, 
+                            imageCenter + radius);
                         
-                        var outerBounds = new SKRect(imageCenter - outerRadius, 
-                            imageCenter - outerRadius,
-                            imageCenter + outerRadius, 
-                            imageCenter + outerRadius);
-
-                        var innerStart = GetCoords(innerRadius, position.StartingDegree);
-                        var innerEnd = GetCoords(innerRadius, position.EndingDegree);
-                        var outerStart = GetCoords(outerRadius, position.StartingDegree);
-                        var outerEnd = GetCoords(outerRadius, position.EndingDegree);
+                        var startingDegree = Math.Max(firstPosition.StartingDegree, secondPosition.EndingDegree);
+                        var endingDegree = Math.Min(firstPosition.EndingDegree, secondPosition.StartingDegree);
                         
                         var path = new SKPath();
-                        path.AddArc(innerBounds, position.StartingDegree, position.EndingDegree);
-                        path.AddArc(outerBounds, position.StartingDegree, position.EndingDegree);
+                        path.AddArc(bounds, startingDegree, endingDegree - startingDegree);
                         surface.Canvas.DrawPath(path, whitePaint);
-                        surface.Canvas.DrawLine(innerStart.x + imageCenter, 
-                            innerStart.y + imageCenter,
-                            outerStart.x + imageCenter, 
-                            outerStart.y + imageCenter, 
-                            whitePaint);
-                        
-                        surface.Canvas.DrawLine(innerEnd.x + imageCenter, 
-                            innerEnd.y + imageCenter,
-                            outerEnd.x + imageCenter, 
-                            outerEnd.y + imageCenter, 
-                            whitePaint);
+                    }
+
+                    renderedWalls.Add(wall);
+                    foreach (var nextWall in wall.First.CellWalls.Concat(wall.Second.CellWalls))
+                    {
+                        wallsToRender.Enqueue(nextWall);
                     }
                 }
+                
+                // Draw outer boundary
+                // TOOD: add exit
+                surface.Canvas.DrawCircle(imageCenter, imageCenter, GetRadiusAtRing(maze.RingCount - 1), whitePaint);
                 
                 return surface.Snapshot();
             }
         }
 
         private static (float x, float y) GetCoords(int radius, float angle)
-            => (radius * (float)Math.Sin(ToRadians(angle)), radius * (float)Math.Cos(ToRadians(angle)));
+            => (radius * (float)Math.Cos(ToRadians(angle)), radius * (float)Math.Sin(ToRadians(angle)));
 
         private static int GetRadiusAtRing(int ring) => CellWidth * ring + CenterCellRadius;
 
         private static float ToRadians(float angle) => (float)(Math.PI / 180) * angle;
+
+        private static float NormalizeAngle(float angle) => angle >= 360 ? angle - 360f : angle;
     }
 }
