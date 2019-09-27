@@ -33,71 +33,115 @@ namespace MazePlayground.Common.Rendering
 
                 var whitePaint = new SKPaint {Color = SKColors.White, StrokeWidth = CellLineWidth, Style = SKPaintStyle.Stroke};
 
-                var centerCell = maze.AllCells[0];
-                var wallsToRender = new Queue<CellWall>(centerCell.CellWalls);
                 var renderedWalls = new HashSet<CellWall>();
-                while (wallsToRender.Any())
+                foreach (var cell in maze.AllCells)
                 {
-                    var wall = wallsToRender.Dequeue();
-                    if (renderedWalls.Contains(wall))
+                    var position = maze.GetPositionOfCell(cell);
+                    DrawRenderOptions(renderOptions, distanceInfo, cell, position, imageCenter, surface);
+                    RenderWallsOfCell(maze, cell, renderedWalls, position, surface, imageCenter, whitePaint);
+                }
+
+                return surface.Snapshot();
+            }
+        }
+
+        private static void DrawRenderOptions(RenderOptions renderOptions, DistanceInfo distanceInfo, Cell cell,
+            CircularMaze.CircularPosition position, int imageCenter, SKSurface surface)
+        {
+            if (renderOptions.ShowGradientOfDistanceFromStart)
+            {
+                var finishingCellDistance = distanceInfo.DistanceFromStartMap[distanceInfo.FarthestCell];
+                var currentCellDistance = distanceInfo.DistanceFromStartMap[cell];
+                var intensity = (byte) (255 * (currentCellDistance / (decimal) finishingCellDistance));
+                var color = new SKColor(0, 0, intensity);
+                var paint = new SKPaint {Color = color};
+
+                var path = new SKPath();
+                if (position.RingNumber > 0)
+                {
+                    var innerRadius = GetRadiusAtRing(position.RingNumber - 1);
+                    var outerRadius = GetRadiusAtRing(position.RingNumber);
+                    var innerBounds = new SKRect(imageCenter - innerRadius,
+                        imageCenter - innerRadius,
+                        imageCenter + innerRadius,
+                        imageCenter + innerRadius);
+
+                    var outerBounds = new SKRect(imageCenter - outerRadius,
+                        imageCenter - outerRadius,
+                        imageCenter + outerRadius,
+                        imageCenter + outerRadius);
+
+                    var degreeDifference = position.EndingDegree - position.StartingDegree;
+                    var firstLineCoords = GetCoords(outerRadius, position.EndingDegree);
+                    var secondLineCoords = GetCoords(innerRadius, position.StartingDegree);
+
+                    path.AddArc(innerBounds, NormalizeAngle(position.StartingDegree), NormalizeAngle(degreeDifference));
+                    path.LineTo(imageCenter + firstLineCoords.x, imageCenter + firstLineCoords.y);
+                    path.ArcTo(outerBounds, position.EndingDegree, -degreeDifference, false);
+                    path.LineTo(imageCenter + secondLineCoords.x, imageCenter + secondLineCoords.y);
+                }
+
+                surface.Canvas.DrawPath(path, paint);
+            }
+        }
+
+        private static void RenderWallsOfCell(CircularMaze maze, 
+            Cell cell, 
+            HashSet<CellWall> renderedWalls, 
+            CircularMaze.CircularPosition position,
+            SKSurface surface, 
+            int imageCenter, 
+            SKPaint whitePaint)
+        {
+            foreach (var wall in cell.CellWalls)
+            {
+                if (renderedWalls.Contains(wall))
+                {
+                    continue;
+                }
+
+                if (!wall.IsPassable)
+                {
+                    var otherCellPosition = maze.GetPositionOfCell(wall.GetOtherCell(cell));
+                    if (position.RingNumber == otherCellPosition.RingNumber)
                     {
-                        continue;
+                        // These cells border on the same ring, so find the angle that's the same and draw a line for it
+                        var angle = Math.Abs(NormalizeAngle(position.StartingDegree) -
+                                             NormalizeAngle(otherCellPosition.EndingDegree)) < 0.001
+                            ? position.StartingDegree
+                            : position.EndingDegree;
+
+                        var lowerRing = Math.Min(position.RingNumber, otherCellPosition.RingNumber);
+                        var innerRadius = GetRadiusAtRing(lowerRing - 1);
+                        var outerRadius = GetRadiusAtRing(lowerRing);
+
+                        var lineStart = GetCoords(innerRadius, angle);
+                        var lineEnd = GetCoords(outerRadius, angle);
+                        surface.Canvas.DrawLine(lineStart.x + imageCenter,
+                            lineStart.y + imageCenter,
+                            lineEnd.x + imageCenter,
+                            lineEnd.y + imageCenter,
+                            whitePaint);
                     }
-
-                    if (!wall.IsPassable)
+                    else
                     {
-                        var firstPosition = maze.GetPositionOfCell(wall.First);
-                        var secondPosition = maze.GetPositionOfCell(wall.Second);
-                        if (firstPosition.RingNumber == secondPosition.RingNumber)
-                        {
-                            // These cells border on the same ring, so find the angle that's the same and draw a line for it
-                            var angle = Math.Abs(NormalizeAngle(firstPosition.StartingDegree) -
-                                                 NormalizeAngle(secondPosition.EndingDegree)) < 0.001
-                                ? firstPosition.StartingDegree
-                                : firstPosition.EndingDegree;
+                        var innerRing = Math.Min(position.RingNumber, otherCellPosition.RingNumber);
+                        var radius = GetRadiusAtRing(innerRing);
+                        var bounds = new SKRect(imageCenter - radius,
+                            imageCenter - radius,
+                            imageCenter + radius,
+                            imageCenter + radius);
 
-                            var lowerRing = Math.Min(firstPosition.RingNumber, secondPosition.RingNumber);
-                            var innerRadius = GetRadiusAtRing(lowerRing - 1);
-                            var outerRadius = GetRadiusAtRing(lowerRing);
+                        var startingDegree = Math.Max(position.StartingDegree, otherCellPosition.EndingDegree);
+                        var endingDegree = Math.Min(position.EndingDegree, otherCellPosition.StartingDegree);
 
-                            var lineStart = GetCoords(innerRadius, angle);
-                            var lineEnd = GetCoords(outerRadius, angle);
-                            surface.Canvas.DrawLine(lineStart.x + imageCenter,
-                                lineStart.y + imageCenter,
-                                lineEnd.x + imageCenter,
-                                lineEnd.y + imageCenter,
-                                whitePaint);
-                        }
-                        else
-                        {
-                            var innerRing = Math.Min(firstPosition.RingNumber, secondPosition.RingNumber);
-                            var radius = GetRadiusAtRing(innerRing);
-                            var bounds = new SKRect(imageCenter - radius,
-                                imageCenter - radius,
-                                imageCenter + radius,
-                                imageCenter + radius);
-
-                            var startingDegree = Math.Max(firstPosition.StartingDegree, secondPosition.EndingDegree);
-                            var endingDegree = Math.Min(firstPosition.EndingDegree, secondPosition.StartingDegree);
-
-                            var path = new SKPath();
-                            path.AddArc(bounds, startingDegree, endingDegree - startingDegree);
-                            surface.Canvas.DrawPath(path, whitePaint);
-                        }
-                    }
-
-                    renderedWalls.Add(wall);
-                    foreach (var nextWall in wall.First.CellWalls.Concat(wall.Second.CellWalls))
-                    {
-                        wallsToRender.Enqueue(nextWall);
+                        var path = new SKPath();
+                        path.AddArc(bounds, startingDegree, endingDegree - startingDegree);
+                        surface.Canvas.DrawPath(path, whitePaint);
                     }
                 }
-                
-                // Draw outer boundary
-                // TOOD: add exit
-                surface.Canvas.DrawCircle(imageCenter, imageCenter, GetRadiusAtRing(maze.RingCount - 1), whitePaint);
-                
-                return surface.Snapshot();
+
+                renderedWalls.Add(wall);
             }
         }
 
