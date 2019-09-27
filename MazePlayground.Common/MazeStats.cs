@@ -40,17 +40,10 @@ namespace MazePlayground.Common
         }
 
         private void AddDeadCellCount(IMaze maze)
-        {
-            var deadEndCount = 0;
+        { 
             var allCells = maze.AllCells;
-            foreach (var cell in allCells)
-            {
-                if (cell.CellWalls.Count == 1)
-                {
-                    deadEndCount++;
-                }
-            }
-            
+            var deadEndCount = allCells.Count(x => x.CellWalls.Count(y => y.IsPassable) == 1);
+
             var percentage = (int) ((deadEndCount / (decimal) allCells.Count) * 100);
             AddStat("Dead Ends", $"{deadEndCount} ({percentage}%%)");
         }
