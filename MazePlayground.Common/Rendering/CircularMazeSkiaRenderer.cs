@@ -10,9 +10,9 @@ namespace MazePlayground.Common.Rendering
     public static class CircularMazeSkiaRenderer
     {
         private const int Margin = 10;
-        private const int CellLineWidth = 1;
-        private const int CellWidth = 25;
-        private const int CenterCellRadius = 25;
+        private const int CellLineWidth = 2;
+        private const int CellWidth = 30;
+        private const int CenterCellRadius = 15;
         
         public static SKImage RenderWithSkia(this CircularMaze maze,
             RenderOptions renderOptions,
@@ -36,26 +36,31 @@ namespace MazePlayground.Common.Rendering
                 var renderedWalls = new HashSet<CellWall>();
                 foreach (var cell in maze.AllCells)
                 {
-                    var position = maze.GetPositionOfCell(cell);
-                    DrawRenderOptions(renderOptions, distanceInfo, cell, position, imageCenter, surface);
-                    RenderWallsOfCell(maze, cell, renderedWalls, position, surface, imageCenter, whitePaint);
+                    DrawRenderOptions(renderOptions, distanceInfo, cell, imageCenter, surface, shortestPathInfo, maze);
+                    DrawWalls(maze, cell, renderedWalls, surface, imageCenter, whitePaint);
                 }
 
                 return surface.Snapshot();
             }
         }
 
-        private static void DrawRenderOptions(RenderOptions renderOptions, DistanceInfo distanceInfo, Cell cell,
-            CircularMaze.CircularPosition position, int imageCenter, SKSurface surface)
+        private static void DrawRenderOptions(RenderOptions renderOptions, 
+            DistanceInfo distanceInfo, 
+            Cell cell,
+            int imageCenter, 
+            SKSurface surface,
+            ShortestPathInfo shortestPathInfo,
+            CircularMaze maze)
         {
+            var position = maze.GetPositionOfCell(cell);
+            var centerOfCell = GetCenterOfCell(position, imageCenter);
+            var whitePaint = new SKPaint {Color = SKColors.White, StrokeWidth = 1, TextAlign = SKTextAlign.Center};
+            var startPaint = new SKPaint {Color = SKColors.Green, StrokeWidth = 1, TextAlign = SKTextAlign.Center};
+            var finishPaint = new SKPaint {Color = SKColors.Red, StrokeWidth = 1, TextAlign = SKTextAlign.Center};
+            var pathPaint = new SKPaint {Color = SKColors.Yellow, StrokeWidth = 1, TextAlign = SKTextAlign.Center};
+            
             if (renderOptions.ShowGradientOfDistanceFromStart)
             {
-                var finishingCellDistance = distanceInfo.DistanceFromStartMap[distanceInfo.FarthestCell];
-                var currentCellDistance = distanceInfo.DistanceFromStartMap[cell];
-                var intensity = (byte) (255 * (currentCellDistance / (decimal) finishingCellDistance));
-                var color = new SKColor(0, 0, intensity);
-                var paint = new SKPaint {Color = color};
-
                 var path = new SKPath();
                 if (position.RingNumber > 0)
                 {
@@ -80,19 +85,52 @@ namespace MazePlayground.Common.Rendering
                     path.ArcTo(outerBounds, position.EndingDegree, -degreeDifference, false);
                     path.LineTo(imageCenter + secondLineCoords.x, imageCenter + secondLineCoords.y);
                 }
-
+                else
+                {
+                    // Center cell should be fully shaded
+                    path.AddCircle(imageCenter, imageCenter, CenterCellRadius);
+                }
+                
+                var finishingCellDistance = distanceInfo.DistanceFromStartMap[distanceInfo.FarthestCell];
+                var currentCellDistance = distanceInfo.DistanceFromStartMap[cell];
+                var intensity = (byte) (255 * (currentCellDistance / (decimal) finishingCellDistance));
+                var color = new SKColor(0, 0, intensity);
+                var paint = new SKPaint {Color = color};
                 surface.Canvas.DrawPath(path, paint);
+            }
+
+            if (renderOptions.HighlightShortestPath && shortestPathInfo.IsCellInPath(cell))
+            {
+                var paint = cell == maze.StartingCell ? startPaint
+                    : cell == maze.FinishingCell ? finishPaint
+                    : pathPaint;
+                
+                var distance = distanceInfo.DistanceFromStartMap[cell];
+                surface.Canvas.DrawText(distance.ToString(), centerOfCell.x, centerOfCell.y, paint);
+            }
+            else if (renderOptions.ShowAllDistances && distanceInfo.DistanceFromStartMap.ContainsKey(cell))
+            {
+                var distance = distanceInfo.DistanceFromStartMap[cell];
+                surface.Canvas.DrawText(distance.ToString(), centerOfCell.x, centerOfCell.y, whitePaint);
+            }
+            else if (cell == maze.StartingCell)
+            {
+                surface.Canvas.DrawText("S", centerOfCell.x, centerOfCell.y, startPaint);
+            }
+            else if (cell == maze.FinishingCell)
+            {
+                surface.Canvas.DrawText("E", centerOfCell.x, centerOfCell.y, finishPaint);
             }
         }
 
-        private static void RenderWallsOfCell(CircularMaze maze, 
+        private static void DrawWalls(CircularMaze maze, 
             Cell cell, 
-            HashSet<CellWall> renderedWalls, 
-            CircularMaze.CircularPosition position,
+            HashSet<CellWall> renderedWalls,
             SKSurface surface, 
             int imageCenter, 
             SKPaint whitePaint)
         {
+            var position = maze.GetPositionOfCell(cell);
             foreach (var wall in cell.CellWalls)
             {
                 if (renderedWalls.Contains(wall))
@@ -143,6 +181,23 @@ namespace MazePlayground.Common.Rendering
 
                 renderedWalls.Add(wall);
             }
+
+            if (position.RingNumber == maze.RingCount - 1 && cell != maze.FinishingCell && cell != maze.StartingCell)
+            {
+                // Last ring, so add rim of the maze
+                var radius = GetRadiusAtRing(maze.RingCount - 1);
+                var bounds = new SKRect(imageCenter - radius,
+                    imageCenter - radius,
+                    imageCenter + radius,
+                    imageCenter + radius);
+
+                var startingDegree = position.StartingDegree;
+                var endingDegree = position.EndingDegree;
+
+                var path = new SKPath();
+                path.AddArc(bounds, startingDegree, endingDegree - startingDegree);
+                surface.Canvas.DrawPath(path, whitePaint);
+            }
         }
 
         private static (float x, float y) GetCoords(int radius, float angle)
@@ -153,5 +208,18 @@ namespace MazePlayground.Common.Rendering
         private static float ToRadians(float angle) => (float)(Math.PI / 180) * angle;
 
         private static float NormalizeAngle(float angle) => angle >= 360 ? angle - 360f : angle;
+
+        private static (float x, float y) GetCenterOfCell(CircularMaze.CircularPosition position, int imageCenter)
+        {
+            var innerRadius = GetRadiusAtRing(position.RingNumber - 1);
+            var outerRadius = GetRadiusAtRing(position.RingNumber);
+            var firstCorner = GetCoords(innerRadius, position.StartingDegree);
+            var secondCorner = GetCoords(outerRadius, position.EndingDegree);
+
+            var width = secondCorner.x - firstCorner.x;
+            var height = secondCorner.y - firstCorner.y;
+
+            return (firstCorner.x + width / 2 + imageCenter, firstCorner.y + height / 2 + imageCenter);
+        }
     }
 }

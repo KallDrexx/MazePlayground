@@ -28,6 +28,7 @@ namespace MazePlayground.App.MonoGame.Ui
 
         public MazeType MazeType => _mazeGenerationConfigDisplay.MazeType;
         public RectangularMazeConfig RectangularMazeConfig => _mazeGenerationConfigDisplay.RectangularMazeConfig;
+        public CircularMazeConfig CircularMazeConfig => _mazeGenerationConfigDisplay.CircularMazeConfig;
         public WallSetupAlgorithm SelectedWallSetupAlgorithm => _mazeGenerationConfigDisplay.SelectedWallSetupAlgorithm;
         public RenderOptions RenderingOptions => GetRenderOptions();
 

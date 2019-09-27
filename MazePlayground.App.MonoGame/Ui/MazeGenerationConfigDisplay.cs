@@ -12,6 +12,7 @@ namespace MazePlayground.App.MonoGame.Ui
     {
         private readonly RectangularMazeGenerationDisplay _rectangularMazeGenerationDisplay;
         private readonly MaskedMazeGenerationDisplay _maskedMazeGenerationDisplay;
+        private readonly CircularMazeGenerationDisplay _circularMazeGenerationDisplay;
         private readonly string[] _mazeGridTypes;
         private readonly string[] _gridAlgorithmNames;
         private int _selectedMazeTypeIndex;
@@ -19,6 +20,7 @@ namespace MazePlayground.App.MonoGame.Ui
         
         public MazeType MazeType => GetMazeType();
         public RectangularMazeConfig RectangularMazeConfig => GetRectangularMazeConfig();
+        public CircularMazeConfig CircularMazeConfig => GetCircularMazeConfig();
         public WallSetupAlgorithm SelectedWallSetupAlgorithm => GetSelectedWallSetupAlgorithm();
         public bool GenerateButtonPressed { get; private set; }
         public bool ShowMaskEditorButtonPressed => _maskedMazeGenerationDisplay.ShowMaskEditorButtonPressed;
@@ -27,6 +29,7 @@ namespace MazePlayground.App.MonoGame.Ui
         {
             _rectangularMazeGenerationDisplay = new RectangularMazeGenerationDisplay();
             _maskedMazeGenerationDisplay = new MaskedMazeGenerationDisplay(imGuiRenderer, graphicsDevice);
+            _circularMazeGenerationDisplay = new CircularMazeGenerationDisplay();
             _mazeGridTypes = Enum.GetValues(typeof(MazeType))
                 .Cast<MazeType>()
                 .Select(x => x.ToString())
@@ -51,6 +54,10 @@ namespace MazePlayground.App.MonoGame.Ui
                 
                 case 1:
                     _maskedMazeGenerationDisplay.Render();
+                    break;
+                
+                case 2:
+                    _circularMazeGenerationDisplay.Render();
                     break;
             }
             
@@ -92,6 +99,18 @@ namespace MazePlayground.App.MonoGame.Ui
             
             return new RectangularMazeConfig(_rectangularMazeGenerationDisplay.RowCount, 
                 _rectangularMazeGenerationDisplay.ColumnCount);
+        }
+
+        private CircularMazeConfig GetCircularMazeConfig()
+        {
+            if (_selectedMazeTypeIndex != 2)
+            {
+                return null;
+            }
+
+            return new CircularMazeConfig(_circularMazeGenerationDisplay.RingCount,
+                _circularMazeGenerationDisplay.ScaleFactor,
+                _circularMazeGenerationDisplay.HalveFactor);
         }
     }
 }

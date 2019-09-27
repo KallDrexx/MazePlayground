@@ -1,22 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MazePlayground.Common.Solvers;
 using MazePlayground.Common.WallSetup;
 
 namespace MazePlayground.Common.Mazes
 {
     public class CircularMaze : IMaze
     {
+        private readonly Random _random = new Random();
         private readonly Dictionary<Cell, CircularPosition> _cellPositionMap = new Dictionary<Cell, CircularPosition>();
         private readonly Dictionary<int, Cell[]> _cellsInRingMap = new Dictionary<int, Cell[]>();
         private readonly Cell[] _cells;
         
         public int RingCount { get; }
-        public Cell StartingCell { get; }
-        public Cell FinishingCell { get; }
+        public Cell StartingCell { get; private set; }
+        public Cell FinishingCell { get; private set; }
         public IReadOnlyList<Cell> AllCells => _cells;
 
-        public CircularMaze(int ringCount, int cellCountScaleFactor, int halveFactor)
+        public CircularMaze(int ringCount, int cellCountScaleFactor, int halveFactor, WallSetupAlgorithm algorithm)
         {
             RingCount = ringCount;
 
@@ -44,11 +46,8 @@ namespace MazePlayground.Common.Mazes
 
             _cells = cells.ToArray();
             BuildWalls();
-            
-            new RecursiveBackTracker().Run(this);
-
-            StartingCell = _cells[0];
-            FinishingCell = _cells.Last(); // temporary
+            SetupWalls(algorithm);
+            SetStartingAndFinishingCells();
         }
 
         public CircularPosition GetPositionOfCell(Cell cell) => _cellPositionMap[cell];
@@ -129,6 +128,44 @@ namespace MazePlayground.Common.Mazes
             }
 
             return false;
+        }
+
+        private void SetupWalls(WallSetupAlgorithm algorithm)
+        {
+            switch (algorithm)
+            {
+                case WallSetupAlgorithm.Wilson: 
+                    new Wilson().Run(this);
+                    break;
+                
+                case WallSetupAlgorithm.AldousBroder:
+                    new AldousBroder().Run(this);
+                    break;
+                
+                case WallSetupAlgorithm.HuntAndKill:
+                    new HuntAndKill().Run(this);
+                    break;
+                
+                case WallSetupAlgorithm.RecursiveBackTracker:
+                    new RecursiveBackTracker().Run(this);
+                    break;
+                
+                default:
+                    throw new NotSupportedException($"Algorithm {algorithm} is not supported by circular mazes");
+            }
+        }
+
+        private void SetStartingAndFinishingCells()
+        {
+            // Starting and finishing cells should be on the outer ring
+            var cellsInRing = _cellsInRingMap[RingCount - 1];
+            StartingCell = cellsInRing[_random.Next(0, cellsInRing.Length)];
+            
+            var distanceInfo = CellDistanceSolver.GetPassableDistancesFromCell(StartingCell);
+            FinishingCell = cellsInRing.Select(x => new {cell = x, distance = distanceInfo.DistanceFromStartMap[x]})
+                .OrderByDescending(x => x.distance)
+                .Select(x => x.cell)
+                .First();
         }
 
         public struct CircularPosition : IEquatable<CircularPosition>
