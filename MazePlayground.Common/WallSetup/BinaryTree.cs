@@ -16,7 +16,7 @@ namespace MazePlayground.Common.WallSetup
             // unmasked rectangular mazes with no holes. 
 
             var rectMaze = (RectangularMaze) maze;
-            foreach (var cell in rectMaze.Cells)
+            foreach (var cell in rectMaze.AllCells)
             {
                 var neighbors = GetNeighbors(rectMaze, cell);
                 if (neighbors.North != null && neighbors.East == null)

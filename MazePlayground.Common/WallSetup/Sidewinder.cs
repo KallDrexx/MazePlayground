@@ -23,7 +23,7 @@ namespace MazePlayground.Common.WallSetup
             
             var rectMaze = (RectangularMaze) maze;
             var potentialNorthernPasses = new List<CellWall>();
-            foreach (var cell in rectMaze.Cells)
+            foreach (var cell in rectMaze.AllCells)
             {
                 var neighbors = GetNeighbors(rectMaze, cell);
                 if (neighbors.North == null && neighbors.East == null)

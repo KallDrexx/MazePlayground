@@ -6,17 +6,11 @@ using MazePlayground.Common.WallSetup;
 
 namespace MazePlayground.Common.Mazes
 {
-    public class MaskedMaze : IMaze
+    public class MaskedMaze : RowColumnBasedMaze
     {
         private readonly Random _random = new Random();
-        private readonly Cell[] _cells;
-        private readonly Dictionary<Cell, int> _cellIndexMap;
-        
-        public int RowCount { get; }
-        public int ColumnCount { get; }
-        public Cell StartingCell { get; private set; }
-        public Cell FinishingCell { get; private set; }
-        public IReadOnlyList<Cell> AllCells => _cells.Where(x => x != null).ToArray();
+
+        public override IReadOnlyList<Cell> AllCells => Cells.Where(x => x != null).ToArray();
 
         public MaskedMaze(int rowCount, int columnCount, IReadOnlyList<bool> mask, WallSetupAlgorithm algorithm)
         {
@@ -28,8 +22,7 @@ namespace MazePlayground.Common.Mazes
 
             RowCount = rowCount;
             ColumnCount = columnCount;
-            _cells = new Cell[rowCount * columnCount];
-            _cellIndexMap = new Dictionary<Cell, int>();
+            Cells = new Cell[rowCount * columnCount];
             for (var row = 0; row < rowCount; row++)
             for (var column = 0; column < columnCount; column++)
             {
@@ -55,8 +48,8 @@ namespace MazePlayground.Common.Mazes
                         westernCell.CellWalls.Add(wall);
                     }
 
-                    _cells[index] = cell;
-                    _cellIndexMap[cell] = index;
+                    Cells[index] = cell;
+                    CellIndexMap[cell] = index;
                 }
             }
             
@@ -64,34 +57,7 @@ namespace MazePlayground.Common.Mazes
             SetupWalls(algorithm);
             SetStartingAndFinishingCell();
         }
-
-        public (int row, int column) GetPositionOfCell(Cell cell)
-        {
-            var index = _cellIndexMap[cell];
-            return GetPositionFromIndex(index);
-        }
-       
-        private (int row, int column) GetPositionFromIndex(int index)
-        {
-            var row = index / ColumnCount;
-            var column = index % ColumnCount;
-
-            return (row, column);
-        }
-
-        private Cell GetCell(int row, int column)
-        {
-            if (row < 0 || column < 0 || row >= RowCount || column >= ColumnCount)
-            {
-                return null;
-            }
-            
-            var index = (row * ColumnCount) + column;
-            return index >= 0 && index < _cells.Length
-                ? _cells[index]
-                : null;
-        }
-
+        
         private void VerifyMazeIsValid()
         {
             // Make sure every cell can be reached

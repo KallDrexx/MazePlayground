@@ -36,7 +36,7 @@ namespace MazePlayground.Common.Rendering
                 var finishPaint = new SKPaint {Color = SKColors.Red, StrokeWidth = CellLineWidth};
                 var pathPaint = new SKPaint {Color = SKColors.Yellow, StrokeWidth = CellLineWidth};
 
-                foreach (var cell in maze.Cells)
+                foreach (var cell in maze.AllCells)
                 {
                     var (row, column) =  maze.GetPositionOfCell(cell);
                     var leftX = (column * CellSize) + Margin;

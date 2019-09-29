@@ -1,22 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using MazePlayground.Common.Solvers;
 using MazePlayground.Common.WallSetup;
 
 namespace MazePlayground.Common.Mazes
 {
-    public class RectangularMaze : IMaze
+    public class RectangularMaze : RowColumnBasedMaze
     {
         private readonly Random _random = new Random();
-        private readonly Dictionary<Cell, int> _cellIndexMap = new Dictionary<Cell, int>();
-
-        public Cell[] Cells { get; }
-        public int RowCount { get; }
-        public int ColumnCount { get; }
-        public Cell StartingCell { get; private set; }
-        public Cell FinishingCell { get; private set; }
-        public IReadOnlyList<Cell> AllCells => Cells;
 
         public RectangularMaze(int rowCount, int columnCount, WallSetupAlgorithm setupAlgorithm)
         {
@@ -48,17 +39,11 @@ namespace MazePlayground.Common.Mazes
                 }
 
                 Cells[index] = cell;
-                _cellIndexMap[cell] = index;
+                CellIndexMap[cell] = index;
             }
 
             SetupWalls(setupAlgorithm);
             SetStartingAndEndingCells();
-        }
-
-        public (int row, int column) GetPositionOfCell(Cell cell)
-        {
-            var index = _cellIndexMap[cell];
-            return GetPositionFromIndex(index);
         }
 
         private void SetupWalls(WallSetupAlgorithm setupAlgorithm)
@@ -92,28 +77,6 @@ namespace MazePlayground.Common.Mazes
                 default:
                     throw new NotSupportedException($"Algorithm {setupAlgorithm} not supported");
             }
-        }
-        
-        private (int row, int column) GetPositionFromIndex(int index)
-        {
-            var row = index / ColumnCount;
-            var column = index % ColumnCount;
-
-            return (row, column);
-        }
-
-        private Cell GetCell(int row, int column)
-        {
-            if (row < 0 || column < 0 || row >= RowCount || column >= ColumnCount)
-            {
-                return null;
-            }
-            
-            var index = (row * ColumnCount) + column;
-
-            return index >= 0 && index < Cells.Length
-                ? Cells[index]
-                : null;
         }
 
         private void SetStartingAndEndingCells()
