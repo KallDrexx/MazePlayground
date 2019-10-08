@@ -14,7 +14,7 @@ namespace MazePlayground.App.Console
         {
             const string pngFileName = "rendering.png";
             
-            var maze = new RectangularMaze(20, 20, WallSetupAlgorithm.Sidewinder);
+            var maze = new HexMaze(20, 20, WallSetupAlgorithm.RecursiveBackTracker);
             var mazeDistanceInfo = CellDistanceSolver.GetPassableDistancesFromCell(maze.StartingCell);
             var mazeShortestPathInfo = ShortestPathSolver.Solve(maze.FinishingCell, mazeDistanceInfo);
             using (var image = maze.RenderWithSkia(null, mazeDistanceInfo, mazeShortestPathInfo))
