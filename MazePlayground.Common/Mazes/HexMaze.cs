@@ -26,10 +26,10 @@ namespace MazePlayground.Common.Mazes
                 
                 // Link cells together if they've been created so far.  Coordinates assume offset rows and straight
                 // columns with the first cell top left most of all cells.
-                var northWestCell = GetCell(column % 2 == 0 ? row : row - 1, column - 1);
+                var northWestCell = GetCell(column % 2 == 1 ? row : row - 1, column - 1);
                 var northCell = GetCell(row - 1, column);
-                var northEastCell = GetCell(column % 2 == 0 ? row : row - 1, column + 1);
-                var southWestCell = GetCell(column % 2 == 0 ? row + 1 : row, column - 1);
+                var northEastCell = GetCell(column % 2 == 1 ? row : row - 1, column + 1);
+                var southWestCell = GetCell(column % 2 == 1 ? row + 1 : row, column - 1);
                 
                 LinkCellsIfNotAlreadyLinked(cell, northWestCell);
                 LinkCellsIfNotAlreadyLinked(cell, northCell);
