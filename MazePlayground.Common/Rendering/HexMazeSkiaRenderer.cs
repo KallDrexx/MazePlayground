@@ -10,7 +10,7 @@ namespace MazePlayground.Common.Rendering
     {
         private const int Margin = 20;
         private const int CellLineWidth = 2;
-        private const int CornerRadius = 12;
+        private const int CornerRadius = 20;
 
         public static SKImage RenderWithSkia(this HexMaze maze,
             RenderOptions renderOptions,
@@ -38,14 +38,24 @@ namespace MazePlayground.Common.Rendering
             {
                 surface.Canvas.Clear(SKColors.Black);
                 
-                var whitePaint = new SKPaint {Color = SKColors.White, StrokeWidth = CellLineWidth};
-                var startPaint = new SKPaint {Color = SKColors.Green, StrokeWidth = CellLineWidth};
-                var finishPaint = new SKPaint {Color = SKColors.Red, StrokeWidth = CellLineWidth};
-                var pathPaint = new SKPaint {Color = SKColors.Yellow, StrokeWidth = CellLineWidth};
+                var whitePaint = new SKPaint {Color = SKColors.White, StrokeWidth = CellLineWidth, TextAlign = SKTextAlign.Center};
+                var startPaint = new SKPaint {Color = SKColors.Green, StrokeWidth = 1, TextAlign = SKTextAlign.Center};
+                var finishPaint = new SKPaint {Color = SKColors.Red, StrokeWidth = 1, TextAlign = SKTextAlign.Center};
+                var pathPaint = new SKPaint {Color = SKColors.Yellow, StrokeWidth = 1, TextAlign = SKTextAlign.Center};
 
                 foreach (var cell in maze.AllCells)
                 {
                     var cellCenter = GetCellCenter(maze, cell, halfHeight, xOffset);
+
+                    var corners = new[]
+                    {
+                        new SKPoint(rightCorner.x + cellCenter.x, rightCorner.y + cellCenter.y),
+                        new SKPoint(bottomRightCorner.x + cellCenter.x, bottomRightCorner.y + cellCenter.y),
+                        new SKPoint(bottomLeftCorner.x + cellCenter.x, bottomLeftCorner.y + cellCenter.y),
+                        new SKPoint(leftCorner.x + cellCenter.x, leftCorner.y + cellCenter.y),
+                        new SKPoint(topLeftCorner.x + cellCenter.x, topLeftCorner.y + cellCenter.y),
+                        new SKPoint(topRightCorner.x + cellCenter.x, topRightCorner.y + cellCenter.y),
+                    };
                     
                     // All walls starting from bottom right and going clockwise
                     var isWallOpen = new[] {false, false, false, false, false, false};
@@ -60,29 +70,57 @@ namespace MazePlayground.Common.Rendering
                         }
                     }
 
-                    if (!isWallOpen[0])
+                    if (renderOptions.ShowGradientOfDistanceFromStart)
                     {
-                        surface.Canvas.DrawLine(rightCorner.x + cellCenter.x, rightCorner.y + cellCenter.y, bottomRightCorner.x + cellCenter.x, bottomRightCorner.y + cellCenter.y, whitePaint);
+                        var finishingCellDistance = distanceInfo.DistanceFromStartMap[distanceInfo.FarthestCell];
+                        var currentCellDistance = distanceInfo.DistanceFromStartMap[cell];
+                        var intensity = (byte)(255 * (currentCellDistance / (decimal)finishingCellDistance));
+                        var color = new SKColor(0, 0, intensity);
+                        var paint = new SKPaint {Color = color, Style = SKPaintStyle.Fill};
+                        
+                        var path = new SKPath();
+                        path.MoveTo(corners[0]);
+                        path.LineTo(corners[1]);
+                        path.LineTo(corners[2]);
+                        path.LineTo(corners[3]);
+                        path.LineTo(corners[4]);
+                        path.LineTo(corners[5]);
+                        path.LineTo(corners[0]);
+                        
+                        surface.Canvas.DrawPath(path, paint);
                     }
-                    if (!isWallOpen[1])
+
+                    for (var x = 0; x < isWallOpen.Length; x++)
                     {
-                        surface.Canvas.DrawLine(bottomRightCorner.x + cellCenter.x, bottomRightCorner.y + cellCenter.y, bottomLeftCorner.x + cellCenter.x, bottomLeftCorner.y + cellCenter.y, whitePaint);
+                        if (!isWallOpen[x])
+                        {
+                            var first = corners[x];
+                            var second = corners[x < 5 ? x + 1 : 0];
+                            surface.Canvas.DrawLine(first, second, whitePaint);
+                        }
                     }
-                    if (!isWallOpen[2])
+                    
+                    if (renderOptions.HighlightShortestPath && shortestPathInfo.IsCellInPath(cell))
                     {
-                        surface.Canvas.DrawLine(bottomLeftCorner.x + cellCenter.x, bottomLeftCorner.y + cellCenter.y, leftCorner.x + cellCenter.x, leftCorner.y + cellCenter.y, whitePaint);
+                        var paint = cell == maze.StartingCell ? startPaint
+                            : cell == maze.FinishingCell ? finishPaint
+                            : pathPaint;
+
+                        var distance = distanceInfo.DistanceFromStartMap[cell];
+                        surface.Canvas.DrawText(distance.ToString(), cellCenter.x, cellCenter.y + halfHeight / 2, paint);
                     }
-                    if (!isWallOpen[3])
+                    else if (renderOptions.ShowAllDistances && distanceInfo.DistanceFromStartMap.ContainsKey(cell))
                     {
-                        surface.Canvas.DrawLine(leftCorner.x + cellCenter.x, leftCorner.y + cellCenter.y, topLeftCorner.x + cellCenter.x, topLeftCorner.y + cellCenter.y, whitePaint);
+                        var distance = distanceInfo.DistanceFromStartMap[cell];
+                        surface.Canvas.DrawText(distance.ToString(), cellCenter.x, cellCenter.y + halfHeight / 2, whitePaint);
                     }
-                    if (!isWallOpen[4])
+                    else if (cell == maze.StartingCell)
                     {
-                        surface.Canvas.DrawLine(topLeftCorner.x + cellCenter.x, topLeftCorner.y + cellCenter.y, topRightCorner.x + cellCenter.x, topRightCorner.y + cellCenter.y, whitePaint);
+                        surface.Canvas.DrawText("S", cellCenter.x, cellCenter.y + halfHeight / 2, startPaint);
                     }
-                    if (!isWallOpen[5])
+                    else if (cell == maze.FinishingCell)
                     {
-                        surface.Canvas.DrawLine(topRightCorner.x + cellCenter.x, topRightCorner.y + cellCenter.y, rightCorner.x + cellCenter.x, rightCorner.y + cellCenter.y, whitePaint);
+                        surface.Canvas.DrawText("E", cellCenter.x, cellCenter.y + halfHeight / 2, finishPaint);
                     }
                 }
 

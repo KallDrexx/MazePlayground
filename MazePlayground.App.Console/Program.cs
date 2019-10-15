@@ -17,7 +17,14 @@ namespace MazePlayground.App.Console
             var maze = new HexMaze(20, 20, WallSetupAlgorithm.RecursiveBackTracker);
             var mazeDistanceInfo = CellDistanceSolver.GetPassableDistancesFromCell(maze.StartingCell);
             var mazeShortestPathInfo = ShortestPathSolver.Solve(maze.FinishingCell, mazeDistanceInfo);
-            using (var image = maze.RenderWithSkia(null, mazeDistanceInfo, mazeShortestPathInfo))
+            var renderOptions = new RenderOptions
+            {
+                ShowGradientOfDistanceFromStart = true,
+                HighlightShortestPath = true,
+                //ShowAllDistances = true,
+            };
+            
+            using (var image = maze.RenderWithSkia(renderOptions, mazeDistanceInfo, mazeShortestPathInfo))
             using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
             using (var stream = File.OpenWrite(pngFileName))
             {

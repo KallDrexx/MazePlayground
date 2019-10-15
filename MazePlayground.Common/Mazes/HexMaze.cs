@@ -85,16 +85,17 @@ namespace MazePlayground.Common.Mazes
 
         private void SetStartAndFinishingCells()
         {
-            var candidates = Enumerable.Range(0, RowCount).Select(x => GetCell(x, 0)) // left
+            var startingCandidates = Enumerable.Range(0, RowCount).Select(x => GetCell(x, 0)).ToArray(); // left
+            var finishingCandidates = startingCandidates
                 .Concat(Enumerable.Range(0, RowCount).Select(x => GetCell(x, ColumnCount - 1))) // right
                 .Concat(Enumerable.Range(0, ColumnCount).Select(x => GetCell(0, x))) // top
                 .Concat(Enumerable.Range(0, ColumnCount).Select(x => GetCell(RowCount - 1, x))) // bottom
                 .ToArray();
 
-            StartingCell = candidates[_random.Next(0, candidates.Length)];
+            StartingCell = startingCandidates[_random.Next(0, startingCandidates.Length)];
 
             var distanceInfo = CellDistanceSolver.GetPassableDistancesFromCell(StartingCell);
-            FinishingCell = candidates.Select(x => new {cell = x, distance = distanceInfo.DistanceFromStartMap[x]})
+            FinishingCell = finishingCandidates.Select(x => new {cell = x, distance = distanceInfo.DistanceFromStartMap[x]})
                 .OrderByDescending(x => x.distance)
                 .Select(x => x.cell)
                 .First();
