@@ -34,6 +34,23 @@ namespace MazePlayground.Common.Mazes
                 : null;
         }
 
+        protected static void LinkCellsIfNotAlreadyLinked(Cell current, Cell neighbor)
+        {
+            if (neighbor == null)
+            {
+                return;
+            }
+
+            if (neighbor.CellWalls.Any(x => x.GetOtherCell(neighbor) == current))
+            {
+                return;
+            }
+            
+            var wall = new CellWall(current, neighbor);
+            current.CellWalls.Add(wall);
+            neighbor.CellWalls.Add(wall);
+        }
+
         private (int row, int column) GetPositionFromIndex(int index)
         {
             var row = index / ColumnCount;

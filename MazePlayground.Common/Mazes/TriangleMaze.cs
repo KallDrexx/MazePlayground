@@ -5,11 +5,11 @@ using MazePlayground.Common.WallSetup;
 
 namespace MazePlayground.Common.Mazes
 {
-    public class HexMaze : RowColumnBasedMaze
+    public class TriangleMaze : RowColumnBasedMaze
     {
         private readonly Random _random = new Random();
-
-        public HexMaze(int rowCount, int columnCount, WallSetupAlgorithm algorithm)
+        
+        public TriangleMaze(int rowCount, int columnCount, WallSetupAlgorithm algorithm)
         {
             RowCount = rowCount;
             ColumnCount = columnCount;
@@ -20,25 +20,35 @@ namespace MazePlayground.Common.Mazes
             {
                 var index = (row * columnCount) + column;
                 var cell = new Cell();
-
+                
                 Cells[index] = cell;
                 CellIndexMap[cell] = index;
-                
-                // Link cells together if they've been created so far.  Coordinates assume offset rows and straight
-                // columns with the first cell top left most of all cells.
-                var northWestCell = GetCell(column % 2 == 1 ? row : row - 1, column - 1);
-                var northCell = GetCell(row - 1, column);
-                var northEastCell = GetCell(column % 2 == 1 ? row : row - 1, column + 1);
-                var southWestCell = GetCell(column % 2 == 1 ? row + 1 : row, column - 1);
-                
-                LinkCellsIfNotAlreadyLinked(cell, northWestCell);
-                LinkCellsIfNotAlreadyLinked(cell, northCell);
-                LinkCellsIfNotAlreadyLinked(cell, northEastCell);
-                LinkCellsIfNotAlreadyLinked(cell, southWestCell);
+
+                var leftCell = GetCell(row, column - 1);
+                if (leftCell != null)
+                {
+                    LinkCellsIfNotAlreadyLinked(cell, leftCell);
+                }
+
+                var topCell = !IsCellPointingUp(row, column) ? GetCell(row - 1, column) : null;
+                if (topCell != null)
+                {
+                    LinkCellsIfNotAlreadyLinked(cell, topCell);
+                }
             }
             
             SetupWalls(algorithm);
             SetStartAndFinishingCells();
+        }
+
+        public static bool IsCellPointingUp(int row, int column)
+        {
+            if (row % 2 == 0)
+            {
+                return column % 2 == 0;
+            }
+
+            return column % 2 == 1;
         }
 
         private void SetupWalls(WallSetupAlgorithm setupAlgorithm)
