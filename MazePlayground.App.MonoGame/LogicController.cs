@@ -146,7 +146,7 @@ namespace MazePlayground.App.MonoGame
             switch (_mazeConfigWindow.MazeType)
             {
                 case MazeType.Rectangular:
-                    var rectangularMazeConfig = _mazeConfigWindow.RectangularMazeConfig;
+                    var rectangularMazeConfig = _mazeConfigWindow.RowColumnMazeConfig;
                     return new RectangularMaze(rectangularMazeConfig.RowCount, 
                         rectangularMazeConfig.ColumnCount,
                         _mazeConfigWindow.SelectedWallSetupAlgorithm);
@@ -162,6 +162,17 @@ namespace MazePlayground.App.MonoGame
                         _mazeConfigWindow.CircularMazeConfig.ScaleFactor, 
                         _mazeConfigWindow.CircularMazeConfig.HalveFactor, 
                         _mazeConfigWindow.SelectedWallSetupAlgorithm);
+
+                case MazeType.Hex:
+                    return new HexMaze(_mazeConfigWindow.RowColumnMazeConfig.RowCount,
+                        _mazeConfigWindow.RowColumnMazeConfig.ColumnCount,
+                        _mazeConfigWindow.SelectedWallSetupAlgorithm);
+
+                case MazeType.Triangle:
+                    return new TriangleMaze(_mazeConfigWindow.RowColumnMazeConfig.RowCount,
+                        _mazeConfigWindow.RowColumnMazeConfig.ColumnCount,
+                        _mazeConfigWindow.SelectedWallSetupAlgorithm);
+                    
                 
                 default:
                     throw new NotSupportedException($"No known way to create maze of type {_mazeConfigWindow.MazeType}");

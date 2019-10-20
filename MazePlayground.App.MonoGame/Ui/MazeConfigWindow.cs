@@ -27,7 +27,7 @@ namespace MazePlayground.App.MonoGame.Ui
         public bool ShowMaskEditorButtonPressed => _mazeGenerationConfigDisplay.ShowMaskEditorButtonPressed;
 
         public MazeType MazeType => _mazeGenerationConfigDisplay.MazeType;
-        public RectangularMazeConfig RectangularMazeConfig => _mazeGenerationConfigDisplay.RectangularMazeConfig;
+        public RowColumnMazeConfig RowColumnMazeConfig => _mazeGenerationConfigDisplay.RowColumnMazeConfig;
         public CircularMazeConfig CircularMazeConfig => _mazeGenerationConfigDisplay.CircularMazeConfig;
         public WallSetupAlgorithm SelectedWallSetupAlgorithm => _mazeGenerationConfigDisplay.SelectedWallSetupAlgorithm;
         public RenderOptions RenderingOptions => GetRenderOptions();

@@ -10,7 +10,7 @@ namespace MazePlayground.App.MonoGame.Ui
 {
     public class MazeGenerationConfigDisplay
     {
-        private readonly RectangularMazeGenerationDisplay _rectangularMazeGenerationDisplay;
+        private readonly RowColumnBasedMazeGenerationDisplay _rowColumnBasedMazeGenerationDisplay;
         private readonly MaskedMazeGenerationDisplay _maskedMazeGenerationDisplay;
         private readonly CircularMazeGenerationDisplay _circularMazeGenerationDisplay;
         private readonly string[] _mazeGridTypes;
@@ -19,7 +19,7 @@ namespace MazePlayground.App.MonoGame.Ui
         private int _selectedWallSetupAlgorithmIndex;
         
         public MazeType MazeType => GetMazeType();
-        public RectangularMazeConfig RectangularMazeConfig => GetRectangularMazeConfig();
+        public RowColumnMazeConfig RowColumnMazeConfig => GetRectangularMazeConfig();
         public CircularMazeConfig CircularMazeConfig => GetCircularMazeConfig();
         public WallSetupAlgorithm SelectedWallSetupAlgorithm => GetSelectedWallSetupAlgorithm();
         public bool GenerateButtonPressed { get; private set; }
@@ -27,7 +27,7 @@ namespace MazePlayground.App.MonoGame.Ui
 
         public MazeGenerationConfigDisplay(GraphicsDevice graphicsDevice, ImGuiRenderer imGuiRenderer)
         {
-            _rectangularMazeGenerationDisplay = new RectangularMazeGenerationDisplay();
+            _rowColumnBasedMazeGenerationDisplay = new RowColumnBasedMazeGenerationDisplay();
             _maskedMazeGenerationDisplay = new MaskedMazeGenerationDisplay(imGuiRenderer, graphicsDevice);
             _circularMazeGenerationDisplay = new CircularMazeGenerationDisplay();
             _mazeGridTypes = Enum.GetValues(typeof(MazeType))
@@ -48,15 +48,17 @@ namespace MazePlayground.App.MonoGame.Ui
             
             switch (_selectedMazeTypeIndex)
             {
-                case 0:
-                    _rectangularMazeGenerationDisplay.Render();
+                case (int) MazeType.Rectangular:
+                case (int) MazeType.Triangle:
+                case (int) MazeType.Hex:
+                    _rowColumnBasedMazeGenerationDisplay.Render();
                     break;
                 
-                case 1:
+                case (int) MazeType.Masked:
                     _maskedMazeGenerationDisplay.Render();
                     break;
                 
-                case 2:
+                case (int) MazeType.Circular:
                     _circularMazeGenerationDisplay.Render();
                     break;
             }
@@ -89,16 +91,17 @@ namespace MazePlayground.App.MonoGame.Ui
                 .First();
         }
 
-        private RectangularMazeConfig GetRectangularMazeConfig()
+        private RowColumnMazeConfig GetRectangularMazeConfig()
         {
-            if (_selectedMazeTypeIndex != 0)
+            var validIndexes = new[] {(int) MazeType.Rectangular, (int) MazeType.Triangle, (int) MazeType.Hex};
+            if (!validIndexes.Contains(_selectedMazeTypeIndex))
             {
                 // Not a rectangular maze
                 return null;
             }
             
-            return new RectangularMazeConfig(_rectangularMazeGenerationDisplay.RowCount, 
-                _rectangularMazeGenerationDisplay.ColumnCount);
+            return new RowColumnMazeConfig(_rowColumnBasedMazeGenerationDisplay.RowCount, 
+                _rowColumnBasedMazeGenerationDisplay.ColumnCount);
         }
 
         private CircularMazeConfig GetCircularMazeConfig()

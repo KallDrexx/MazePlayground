@@ -124,6 +124,12 @@ namespace MazePlayground.App.MonoGame
                 case CircularMaze circularMaze:
                     return circularMaze.RenderWithSkia(_renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo);
                 
+                case HexMaze hexMaze:
+                    return hexMaze.RenderWithSkia(_renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo);
+                
+                case TriangleMaze triangleMaze:
+                    return triangleMaze.RenderWithSkia(_renderOptions, _mazeDistanceInfo, _mazeShortestPathInfo);
+                
                 default:
                     throw new NotSupportedException($"Maze type {_currentMaze.GetType()} cannot be rendered");
             }

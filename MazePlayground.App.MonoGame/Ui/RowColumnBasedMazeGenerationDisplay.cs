@@ -2,7 +2,7 @@ using ImGuiNET;
 
 namespace MazePlayground.App.MonoGame.Ui
 {
-    public class RectangularMazeGenerationDisplay
+    public class RowColumnBasedMazeGenerationDisplay
     {
         private int _rowCount = 29;
         private int _columnCount = 29;
