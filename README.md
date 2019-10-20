@@ -2,7 +2,7 @@
 Experimentation with generating and rendering mazes in C#
 
 ## Demonstration Video
-[![Demonstration Video](http://img.youtube.com/vi/rZLxmRVm71E/0.jpg)](http://www.youtube.com/watch?v=rZLxmRVm71E "Youtube Video")
+[![Demonstration Video](https://i.imgur.com/Q6IbW8X.png)](http://www.youtube.com/watch?v=rZLxmRVm71E "Youtube Video")
 
 ## Supported Maze Types
 * Rectangular (full and masked)
